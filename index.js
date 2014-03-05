@@ -3,6 +3,7 @@ var fs = require('fs');
 var express = require("express");
 
 var existsSync = fs.existsSync || path.existsSync;
+var services = [];
 
 
 //Utils
@@ -151,7 +152,7 @@ Handler.prototype.schema = function(callback) {
 					result.backend = self.options.backend;
 				}
 				if (self.options.display_field) {
-					result.display_field = self.options.display_field
+					result.display_field = self.options.display_field;
 				} else if (result.fields.name) {
 					result.display_field = '%name';
 				}
@@ -174,7 +175,7 @@ Handler.prototype.schema = function(callback) {
 					result.backend = self.options.backend;
 				}
 				if (self.options.display_field) {
-					result.display_field = self.options.display_field
+					result.display_field = self.options.display_field;
 				} else if (result.fields.name) {
 					result.display_field = '%name';
 				}
@@ -194,7 +195,11 @@ var appHandler,
 
 exports.init = function(app, options) {
 	appHandler = app;
-	app.use('/admin', express.static(__dirname + "/admin"));
+	appOptions = options;
+	appHandler.use('/admin', express.static(__dirname + "/admin"));
+	appHandler.use('/services',function(req,res){
+		res.send(services);
+	});
 };
 
 exports.register = function(options, callback) {
@@ -211,7 +216,8 @@ exports.register = function(options, callback) {
 		return;
 	}
 
-	options.path = options.path || '/' + model.name.toLowerCase();
+	var modelName = model.name.toLowerCase();
+	options.path = options.path || '/' + modelName;
 	pathWithId = options.path + '/:id';
 	console.log('REGISTERING ' + options.path);
 	var handler = new Handler(model, options);
@@ -247,9 +253,16 @@ exports.register = function(options, callback) {
 		}
 	}
 
+	services.push(
+		options.path+"/schema"
+	);
+
 	//calls schema function
 	if (typeof callback === "function") {
 		handler.schema(callback);
 	}
+
+
+
 	return options.path + "/schema";
 };
