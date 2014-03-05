@@ -1,0 +1,49 @@
+{
+  "name": "restize",
+  "description": "Insanely easy API generator and publisher for Node JS",
+  "version": "0.5",
+  "author": {
+    "name": "German Gonzalez",
+    "email": "restize@inmedia.co"
+  },
+  "keywords": [
+    "mongodb",
+    "api",
+    "rest",
+    "schema",
+    "mongoose",
+    "sequelize",
+    "express"
+  ],
+  "contributors": [
+    {
+      "name": "German Gonzalez",
+      "email": "restize@inmedia.co"
+    },
+    {
+      "name": "Juan Martinez",
+      "email": "juan.mar@gmail.com"
+    },
+    {
+      "name": "Andres Herrera",
+      "email": "andres.herrera@gmail.com"
+    }
+  ],
+  "dependencies": {
+  },
+  "devDependencies": {
+  },
+  "main": "./index.js",
+  "engines": {
+    "node": ">=0.8"
+  },
+  "bugs": {
+    "url": "https://github.com/inmediaco/restize/issues/new",
+    "email": "restize@inmedia.co"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/inmediaco/restize.git"
+  },
+  "homepage": "https://github.com/inmediaco/restize"
+}

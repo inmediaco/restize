@@ -1,0 +1,84 @@
+doctype 5
+html
+	head
+		title Playerking Admin
+		//link(rel='stylesheet', href='/stylesheets/style.css')
+		link(rel='stylesheet', href='css/bootstrap.min.css')
+		link(rel='stylesheet', href='css/bootstrap-responsive.min.css')
+		
+		script(src="js/lib/jquery.js")
+		script(src="js/lib/lodash.js")
+		script(src="js/lib/backbone.js")
+		script(src="js/lib/bootstrap.js")
+		script(src="https://cdn.firebase.com/v0/firebase.js")
+		script(src="js/lib/backbone-firebase.js")
+		script(src="js/lib/backbone-forms/backbone-forms.js")
+		script(src="js/lib/backbone-forms/editors/list.js")
+		script(src="js/lib/backbone-forms/editors/inline-radio.js")
+		script(src="js/lib/backbone-forms/templates/bootstrap.js")
+		script(src="js/lib/backbone-forms/adapters/backbone.bootstrap-modal.js")
+		// script(src="/js/bbf.js")
+		script(src="js/admin.js")
+		
+		
+		script(id="admin-item", type="text/template")
+			td
+				input(type="checkbox")
+			<% _.each(fields, function(name) { %>
+			td <%= item[name] %>
+			<% }); %>
+			td
+				a.btn(href!="#<%= url%>/<%= id %>")
+					i.icon-pencil 
+				&nbsp;
+				a.btn.delete(href="#1")
+					i.icon-trash
+					
+			
+		script(id="admin-index", type="text/template")
+				a.btn.btn-primary(href!="#<%=url%>/add") add 
+					i.icon-white.icon-plus
+				br
+				table#items.table.table-bordered.table-hover
+					tr
+						th
+							input(type="checkbox")
+						<% _.each(headers, function(value) { %>
+						th <%= value %>
+						<% }); %>
+						th actions
+
+	body
+		div.container
+			div.row
+				div.span3
+					ul.nav.nav-list
+						li.active
+							a(href="#home") Home
+						li
+							a(href="#1") Base
+							ul
+								li 
+									a(href="#show") Show
+								li
+									a(href="#season") Season
+								li
+									a(href="#round") Round
+						li 
+							a(href="#1") NFL
+							ul
+								li
+									a(href="#nflteam") Team
+								li
+									a(href="#nflmatch") Match
+								li
+									a(href="#nflplayresult") Play Result
+								li
+									a(href="#nflplayquiz") Play Quiz
+								li
+									a(href="#nflplay") Play
+				div.span9
+					h2#title Team
+					#content
+					//table.table.table-bordered.table-hover(id="admin-index")
+		

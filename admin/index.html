@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>HCO Admin DEVELOPMENT</title>
+    <!--link(rel='stylesheet', href='/stylesheets/style.css')-->
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/bootstrap-responsive.min.css">
+    <script src="js/lib/jquery.js"></script>
+    <script src="js/lib/lodash.js"></script>
+    <script src="js/lib/backbone.js"></script>
+    <script src="js/lib/bootstrap.js"></script>
+    <script src="https://cdn.firebase.com/v0/firebase.js"></script>
+    <script src="js/lib/backbone-firebase.js"></script>
+    <script src="js/lib/backbone-forms/backbone-forms.js"></script>
+    <script src="js/lib/backbone-forms/editors/list.js"></script>
+    <script src="js/lib/backbone-forms/editors/inline-radio.js"></script>
+    <script src="js/lib/backbone-forms/templates/bootstrap.js"></script>
+    <script src="js/lib/backbone-forms/adapters/backbone.bootstrap-modal.js"></script>
+    <!-- script(src="/js/bbf.js")-->
+    <script src="js/admin.js"></script>
+    <script id="admin-item" type="text/template">
+      <td>
+        <input type="checkbox">
+      </td><% _.each(fields, function(name) { %>
+      <td><%= item[name] %></td><% }); %>
+      <td><a href="#<%= url%>/<%= id %>" class="btn"><i class="icon-pencil"> </i></a>&nbsp;<a href="#1" class="btn delete"><i class="icon-trash"></i></a></td>
+    </script>
+    <script id="admin-index" type="text/template"><a href="#<%=url%>/add" class="btn btn-primary">add <i class="icon-white icon-plus"></i></a><br>
+      <table id="items" class="table table-bordered table-hover">
+        <tr>
+          <th>
+            <input type="checkbox">
+          </th><% _.each(headers, function(value) { %>
+          <th><%= value %></th><% }); %>
+          <th>actions</th>
+        </tr>
+      </table>
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <div class="span3">
+          <ul class="nav nav-list">
+            <li class="active"><a href="#home">Home</a></li>
+            <li><a href="#1">User</a>
+              <ul>
+                <li> <a href="#person">Person</a></li>
+                <li><a href="#organization">Organization</a></li>
+                <li><a href="#profile">Profile</a></li>
+                <li><a href="#test">Test</a></li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+        <div class="span9">
+          <h2 id="title">Team</h2>
+          <div id="content"></div>
+          <!--table.table.table-bordered.table-hover(id="admin-index")-->
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
