@@ -152,7 +152,7 @@ Handler.prototype.schema = function(callback) {
 				}
 				if (self.options.display_field) {
 					result.display_field = self.options.display_field
-				}  else if(result.fields.name) {
+				} else if (result.fields.name) {
 					result.display_field = '%name';
 				}
 
@@ -175,7 +175,7 @@ Handler.prototype.schema = function(callback) {
 				}
 				if (self.options.display_field) {
 					result.display_field = self.options.display_field
-				}  else if(result.fields.name) {
+				} else if (result.fields.name) {
 					result.display_field = '%name';
 				}
 				self.schemaDefinition = result;
@@ -189,9 +189,10 @@ Handler.prototype.schema = function(callback) {
 
 
 
-var appHandler;
+var appHandler,
+	appOptions;
 
-exports.init = function(app) {
+exports.init = function(app, options) {
 	appHandler = app;
 	app.use('/admin', express.static(__dirname + "/admin"));
 };
@@ -216,13 +217,35 @@ exports.register = function(options, callback) {
 	var handler = new Handler(model, options);
 
 	//NOTE: don't change get order
-	appHandler.get(options.path, handler.list());
-	appHandler.get(options.path + '/schema', handler.schema());
-	appHandler.get(pathWithId, handler.read());
+	if (typeof appOptions.auth !== 'undefined') {
+		appHandler.get(options.path, appOptions.auth, handler.list());
+		appHandler.get(options.path + '/schema', appOptions.auth, handler.schema());
+		appHandler.get(pathWithId, appOptions.auth, handler.read());
 
-	appHandler.post(options.path, handler.create());
-	appHandler.put(pathWithId, handler.update());
-	appHandler.del(pathWithId, handler.destroy());
+		appHandler.post(options.path, appOptions.auth, handler.create());
+		appHandler.put(pathWithId, appOptions.auth, handler.update());
+		appHandler.del(pathWithId, appOptions.auth, handler.destroy());
+
+	} else {
+		if (options.auth !== 'undefined') {
+			appHandler.get(options.path, options.auth, handler.list());
+			appHandler.get(options.path + '/schema', options.auth, handler.schema());
+			appHandler.get(pathWithId, options.auth, handler.read());
+
+			appHandler.post(options.path, options.auth, handler.create());
+			appHandler.put(pathWithId, options.auth, handler.update());
+			appHandler.del(pathWithId, options.auth, handler.destroy());
+
+		} else {
+			appHandler.get(options.path, handler.list());
+			appHandler.get(options.path + '/schema', handler.schema());
+			appHandler.get(pathWithId, handler.read());
+
+			appHandler.post(options.path, handler.create());
+			appHandler.put(pathWithId, handler.update());
+			appHandler.del(pathWithId, handler.destroy());
+		}
+	}
 
 	//calls schema function
 	if (typeof callback === "function") {
