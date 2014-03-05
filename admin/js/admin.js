@@ -69,9 +69,14 @@
 		var deferreds = [];
 		_.each(urls, function(url) {
 			deferreds.push(
-				$.getJSON(url + "/schema", function(schema) {
+				$.getJSON(url, function(schema) {
 					var name = schema.name.toLowerCase();
 					Schemas[name] = schema;
+					$('#menu').append(
+						$('<li/>').append(
+							$('<a/>').attr('href','#'+name).html(schema.name)
+						)
+					);
 
 				}));
 		});
@@ -295,8 +300,8 @@
 			},
 
 			list: function(model) {
+				$('#title').html(model);
 				var collection = this._createCollection(model);
-				console.log(model);
 				var view = AdminIndexView.extend({
 					collection: collection,
 					fields: ['name'],
@@ -337,16 +342,13 @@
 					model.save({}, {
 						success: function(model,resp) {
 							if (!resp.error) {
-								self._updateMatchIndex(model);
 								alert('Model has been saved successfully.' + model.id);
+								self.navigate(model_name, {
+									trigger: true
+								});
 							} else {
 								alert("ERROR: "+resp.error.message);
 							}
-							
-							
-							self.navigate(model_name, {
-								trigger: true
-							});
 						}
 					});
 				});
@@ -358,28 +360,16 @@
 					this.collections[model_name] = new Collections[model_name]();
 				}
 				return this.collections[model_name];
-			},
-			_updateMatchIndex: function(model) {
-				if (model.get('kind') === 'nfl.match') {
-					if (!this.calendar) {
-						this.calendar = new Firebase('https://playerking.firebaseio.com/calendar/');
-					}
-					var child = model.get('season') + '/' + model.get('round') + '/' + model.id
-					this.calendar.child(child).set(model.get('playable'));
-				}
 			}
 		});
 
 
 		//Starts app after Model Initialization
-		loadModels(['/person',
-			'/organization',
-			'/profile',
-			'/test'
-		], function() {
-			app = new AdminRouter();
-			Backbone.history.start();
-
+		$.getJSON('/services', function(services){
+			loadModels(services, function() {
+				app = new AdminRouter();
+				Backbone.history.start();
+			});
 		});
 	});
 

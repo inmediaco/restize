@@ -1,7 +1,7 @@
 doctype 5
 html
 	head
-		title Playerking Admin
+		title Restize Admin
 		//link(rel='stylesheet', href='/stylesheets/style.css')
 		link(rel='stylesheet', href='css/bootstrap.min.css')
 		link(rel='stylesheet', href='css/bootstrap-responsive.min.css')
@@ -52,33 +52,12 @@ html
 		div.container
 			div.row
 				div.span3
-					ul.nav.nav-list
+					ul#menu.nav.nav-list
 						li.active
 							a(href="#home") Home
-						li
-							a(href="#1") Base
-							ul
-								li 
-									a(href="#show") Show
-								li
-									a(href="#season") Season
-								li
-									a(href="#round") Round
-						li 
-							a(href="#1") NFL
-							ul
-								li
-									a(href="#nflteam") Team
-								li
-									a(href="#nflmatch") Match
-								li
-									a(href="#nflplayresult") Play Result
-								li
-									a(href="#nflplayquiz") Play Quiz
-								li
-									a(href="#nflplay") Play
+					
 				div.span9
-					h2#title Team
+					h2#title
 					#content
 					//table.table.table-bordered.table-hover(id="admin-index")
 		
