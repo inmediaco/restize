@@ -137,7 +137,13 @@
 		if (data._id) {
 			delete data._id;
 		}
-		model.findByIdAndUpdate(id, data, callback);
+		//Dont use findAndUpdate Reason: http://github.com/LearnBoost/mongoose/issues/964
+		model.findById(id, function(err,doc){
+			for (var field in data) {
+				doc[field] = data[field];
+			}
+			doc.save(callback);
+		});
 	};
 	//------------------------------
 	// Destroy
