@@ -195,7 +195,7 @@ var appHandler,
 
 exports.init = function(app, options) {
 	appHandler = app;
-	appOptions = options;
+	appOptions = options || {};
 	appHandler.use('/admin', express.static(__dirname + "/admin"));
 	appHandler.use('/services',function(req,res){
 		res.send(services);
@@ -216,7 +216,7 @@ exports.register = function(options, callback) {
 		return;
 	}
 
-	var modelName = model.name.toLowerCase(); 
+	var modelName = model.name.toLowerCase();
 	options.path = options.path || '/' + modelName;
 	pathWithId = options.path + '/:id';
 	console.log('REGISTERING ' + options.path);
@@ -233,7 +233,7 @@ exports.register = function(options, callback) {
 		appHandler.del(pathWithId, appOptions.auth, handler.destroy());
 
 	} else {
-		if (options.auth !== 'undefined') {
+		if (typeof options.auth !== 'undefined') {
 			appHandler.get(options.path, options.auth, handler.list());
 			appHandler.get(options.path + '/schema', options.auth, handler.schema());
 			appHandler.get(pathWithId, options.auth, handler.read());
