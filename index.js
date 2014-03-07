@@ -197,7 +197,7 @@ exports.init = function(app, options) {
 	appHandler = app;
 	appOptions = options || {};
 	appHandler.use('/admin', express.static(__dirname + "/admin"));
-	appHandler.use('/services',function(req,res){
+	appHandler.use('/services', function(req, res) {
 		res.send(services);
 	});
 };
@@ -224,24 +224,90 @@ exports.register = function(options, callback) {
 
 	//NOTE: don't change get order
 	if (typeof appOptions.auth !== 'undefined') {
-		appHandler.get(options.path, appOptions.auth, handler.list());
-		appHandler.get(options.path + '/schema', appOptions.auth, handler.schema());
-		appHandler.get(pathWithId, appOptions.auth, handler.read());
+		if (typeof options.not_auth !== 'undefined') {
+			if (typeof options.not_auth.get !== 'undefined' && options.not_auth.get) {
+				appHandler.get(options.path, handler.list());
+			} else {
+				appHandler.get(options.path, appOptions.auth, handler.list());
+			}
+			if (typeof options.not_auth.schema !== 'undefined' && options.not_auth.schema) {
+				appHandler.get(options.path + '/schema', handler.schema());
+			} else {
+				appHandler.get(options.path + '/schema', appOptions.auth, handler.schema());
+			}
+			if (typeof options.not_auth.get_id !== 'undefined' && options.not_auth.get_id) {
+				appHandler.get(pathWithId, handler.read());
+			} else {
+				appHandler.get(pathWithId, appOptions.auth, handler.read());
+			}
 
-		appHandler.post(options.path, appOptions.auth, handler.create());
-		appHandler.put(pathWithId, appOptions.auth, handler.update());
-		appHandler.del(pathWithId, appOptions.auth, handler.destroy());
+			if (typeof options.not_auth.post !== 'undefined' && options.not_auth.post) {
+				appHandler.post(options.path, handler.create());
+			} else {
+				appHandler.post(options.path, appOptions.auth, handler.create());
+			}
+			if (typeof options.not_auth.put !== 'undefined' && options.not_auth.put) {
+				appHandler.put(pathWithId, handler.update());
+			} else {
+				appHandler.put(pathWithId, appOptions.auth, handler.update());
+			}
+			if (typeof options.not_auth.del !== 'undefined' && options.not_auth.del) {
+				appHandler.del(pathWithId, handler.destroy());
+			} else {
+				appHandler.del(pathWithId, appOptions.auth, handler.destroy());
+			}
+		} else {
+			appHandler.get(options.path, appOptions.auth, handler.list());
+			appHandler.get(options.path + '/schema', appOptions.auth, handler.schema());
+			appHandler.get(pathWithId, appOptions.auth, handler.read());
 
+			appHandler.post(options.path, appOptions.auth, handler.create());
+			appHandler.put(pathWithId, appOptions.auth, handler.update());
+			appHandler.del(pathWithId, appOptions.auth, handler.destroy());
+		}
 	} else {
 		if (typeof options.auth !== 'undefined') {
-			appHandler.get(options.path, options.auth, handler.list());
-			appHandler.get(options.path + '/schema', options.auth, handler.schema());
-			appHandler.get(pathWithId, options.auth, handler.read());
+			if (typeof options.not_auth !== 'undefined') {
+				if (typeof options.not_auth.get !== 'undefined' && options.not_auth.get) {
+					appHandler.get(options.path, handler.list());
+				} else {
+					appHandler.get(options.path, options.auth, handler.list());
+				}
+				if (typeof options.not_auth.schema !== 'undefined' && options.not_auth.schema) {
+					appHandler.get(options.path + '/schema', handler.schema());
+				} else {
+					appHandler.get(options.path + '/schema', options.auth, handler.schema());
+				}
+				if (typeof options.not_auth.get_id !== 'undefined' && options.not_auth.get_id) {
+					appHandler.get(pathWithId, handler.read());
+				} else {
+					appHandler.get(pathWithId, options.auth, handler.read());
+				}
 
-			appHandler.post(options.path, options.auth, handler.create());
-			appHandler.put(pathWithId, options.auth, handler.update());
-			appHandler.del(pathWithId, options.auth, handler.destroy());
+				if (typeof options.not_auth.post !== 'undefined' && options.not_auth.post) {
+					appHandler.post(options.path, handler.create());
+				} else {
+					appHandler.post(options.path, options.auth, handler.create());
+				}
+				if (typeof options.not_auth.put !== 'undefined' && options.not_auth.put) {
+					appHandler.put(pathWithId, handler.update());
+				} else {
+					appHandler.put(pathWithId, options.auth, handler.update());
+				}
+				if (typeof options.not_auth.del !== 'undefined' && options.not_auth.del) {
+					appHandler.del(pathWithId, handler.destroy());
+				} else {
+					appHandler.del(pathWithId, options.auth, handler.destroy());
+				}
+			} else {
+				appHandler.get(options.path, options.auth, handler.list());
+				appHandler.get(options.path + '/schema', options.auth, handler.schema());
+				appHandler.get(pathWithId, options.auth, handler.read());
 
+				appHandler.post(options.path, options.auth, handler.create());
+				appHandler.put(pathWithId, options.auth, handler.update());
+				appHandler.del(pathWithId, options.auth, handler.destroy());
+			}
 		} else {
 			appHandler.get(options.path, handler.list());
 			appHandler.get(options.path + '/schema', handler.schema());
@@ -254,7 +320,7 @@ exports.register = function(options, callback) {
 	}
 
 	services.push(
-		options.path+"/schema"
+		options.path + "/schema"
 	);
 
 	//calls schema function
