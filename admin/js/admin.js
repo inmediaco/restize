@@ -230,7 +230,11 @@
 				if (r === true) {
 					this.model.destroy({
 						success: function(model, response) {
-							alert('Item deleted successfully!.');
+							if(!response.error) {
+								alert('Item deleted successfully!.');	
+							} else {
+								alert(response.error.message);
+							}
 						},
 						error: function() {
 							alert('Item could NOT be deleted.');

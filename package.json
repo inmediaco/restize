@@ -30,9 +30,9 @@
     }
   ],
   "dependencies": {
+    "async": "~0.2.10"
   },
-  "devDependencies": {
-  },
+  "devDependencies": {},
   "main": "./index.js",
   "engines": {
     "node": ">=0.8"
