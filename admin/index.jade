@@ -24,9 +24,7 @@ html
 		script(id="admin-item", type="text/template")
 			td
 				input(type="checkbox")
-			<% _.each(fields, function(name) { %>
-			td <%= item[name] %>
-			<% }); %>
+			td <%= display_name %>
 			td
 				a.btn(href!="#<%= url%>/<%= id %>")
 					i.icon-pencil 

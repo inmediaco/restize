@@ -38,11 +38,16 @@
 		if (!nocache && Models[name]) {
 			return Models[name];
 		}
-
 		var modelDef = {
 			toString: function() {
-				//TODO: get from schema
-				return this.get("name") || "";
+				if (!this.id) {
+					return "";
+				}
+				var label = this.get("name") || this.id;
+				if (schema.display_field) {
+					label = getLabel(schema.display_field, this.attributes);
+				}
+				return label;
 			}
 		};
 		var backend = schema.backend;
@@ -74,7 +79,7 @@
 					Schemas[name] = schema;
 					$('#menu').append(
 						$('<li/>').append(
-							$('<a/>').attr('href','#'+name).html(schema.name)
+							$('<a/>').attr('href', '#' + name).html(schema.name)
 						)
 					);
 
@@ -101,8 +106,20 @@
 		return defaults;
 	}
 
+	function getLabel(displayText, obj) {
+		var result = displayText;
+		var v = result.match(/%([a-zA-Z\_])+/gi).map(function(val) {
+			return val.substr(1);
+		});
+
+		for (var i = 0; i < v.length; i++) {
+			result = result.replace('%' + v[i], obj[v[i]]);
+		}
+		return result;
+	}
+
 	function getRefField(refname, aslist) {
-		var Collection = buildCollection(refname,true,true);
+		var Collection = buildCollection(refname, true, true);
 		var fieldDef = {
 			type: 'Text'
 		};
@@ -113,6 +130,7 @@
 				fieldDef.type = 'List';
 				fieldDef.itemType = 'Select';
 			}
+			console.log(refname, fieldDef.type);
 			var col = new Collection();
 			//TODO: Handle empty values
 			col.fetch().done(function() {
@@ -166,15 +184,10 @@
 					fieldDef = {
 						type: 'List',
 						itemType: 'Object',
-						subSchema:getFormSchema(def.of),
+						subSchema: getFormSchema(def.of),
 						itemToString: function(obj) {
-							console.log(this);
-							//TODO: Temporary to handle result fields. REMOVE or Read Info from SCHEMA
-							if (this.subSchema && this.subSchema.result) {
-								var result = this.subSchema.result.options.get(obj.result).get('name');
-								return result+" => "+obj.factor;
-							}
-							return obj.name || obj.label ||obj.text || obj._id;
+							var label = obj.name || obj._id;
+							return label;
 						}
 					};
 				} else {
@@ -197,6 +210,7 @@
 			fieldDef.help = def.help;
 			formSchema[field] = fieldDef;
 		});
+
 		return formSchema;
 	}
 
@@ -204,7 +218,7 @@
 
 	$(document).ready(function() {
 		Backbone.Form.editors.List.Modal.ModalAdapter = Backbone.BootstrapModal;
-		
+
 		var AdminItemView = Backbone.View.extend({
 			tagName: 'tr',
 			template: _.template($('#admin-item').html()),
@@ -220,7 +234,7 @@
 				$(this.el).html(this.template({
 					id: this.model.id,
 					item: this.model.toJSON(),
-					fields: fields,
+					display_name: this.model.toString(),
 					url: url
 				}));
 				return this;
@@ -230,8 +244,8 @@
 				if (r === true) {
 					this.model.destroy({
 						success: function(model, response) {
-							if(!response.error) {
-								alert('Item deleted successfully!.');	
+							if (!response.error) {
+								alert('Item deleted successfully!.');
 							} else {
 								alert(response.error.message);
 							}
@@ -248,12 +262,11 @@
 		var AdminIndexView = Backbone.View.extend({
 			tagName: 'div',
 			collection: {},
-			fields: [],
 			template: _.template($('#admin-index').html()),
 
 			initialize: function(options) {
 				this.$el.html(this.template({
-					headers: this.fields,
+					headers: ['display name'],
 					url: this.url
 				}));
 				this.listenTo(this.collection, 'reset', this.addAll);
@@ -274,7 +287,7 @@
 				var view = new AdminItemView({
 					model: item
 				});
-				this.$('#items').append(view.render(this.fields, this.url).el);
+				this.$('#items').append(view.render(this.url).el);
 			},
 			render: function() {
 				return this;
@@ -308,7 +321,6 @@
 				var collection = this._createCollection(model);
 				var view = AdminIndexView.extend({
 					collection: collection,
-					fields: ['name'],
 					url: model
 				});
 
@@ -344,14 +356,14 @@
 					form.commit();
 					self.collections[model_name].add(model);
 					model.save({}, {
-						success: function(model,resp) {
+						success: function(model, resp) {
 							if (!resp.error) {
 								alert('Model has been saved successfully.' + model.id);
 								self.navigate(model_name, {
 									trigger: true
 								});
 							} else {
-								alert("ERROR: "+resp.error.message);
+								alert("ERROR: " + resp.error.message);
 							}
 						}
 					});
@@ -369,7 +381,7 @@
 
 
 		//Starts app after Model Initialization
-		$.getJSON('/services', function(services){
+		$.getJSON('/services', function(services) {
 			loadModels(services, function() {
 				app = new AdminRouter();
 				Backbone.history.start();

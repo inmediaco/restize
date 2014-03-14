@@ -21,8 +21,8 @@
     <script id="admin-item" type="text/template">
       <td>
         <input type="checkbox">
-      </td><% _.each(fields, function(name) { %>
-      <td><%= item[name] %></td><% }); %>
+      </td>
+      <td><%= display_name %></td>
       <td><a href="#<%= url%>/<%= id %>" class="btn"><i class="icon-pencil"> </i></a>&nbsp;<a href="#1" class="btn delete"><i class="icon-trash"></i></a></td>
     </script>
     <script id="admin-index" type="text/template"><a href="#<%=url%>/add" class="btn btn-primary">add <i class="icon-white icon-plus"></i></a><br>
