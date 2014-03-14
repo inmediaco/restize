@@ -97,7 +97,7 @@ Handler.prototype.read = function(req, res) {
 };
 
 Handler.prototype.create = function(req, res) {
-	this.adapter.create(self.model, req.body, function(err, result) {
+	this.adapter.create(this.model, req.body, function(err, result) {
 		if (!err) {
 			res.send(result);
 		} else {
