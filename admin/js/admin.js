@@ -130,7 +130,6 @@
 				fieldDef.type = 'List';
 				fieldDef.itemType = 'Select';
 			}
-			console.log(refname, fieldDef.type);
 			var col = new Collection();
 			//TODO: Handle empty values
 			col.fetch().done(function() {
@@ -297,8 +296,10 @@
 		var cleanData = function(attributes, schema) {
 			if (schema.fields) {
 				_.each(attributes, function(value, name) {
-					if (schema.fields[name].type == 'Object') {
-						cleanData(value, schema[name]);
+					if (!schema.fields[name]) {
+						delete attributes[name];
+					} else if (schema.fields[name].type == 'Object') {
+						cleanData(value, schema.fields[name]);
 					} else if (schema.fields[name].type == 'Array' && schema.fields[name].of.ref) {
 						for (var i = 0; i < value.length; i++) {
 							if (!value[i]) {
@@ -371,9 +372,7 @@
 				submitBtn.click(function() {
 					form.commit();
 					self.collections[model_name].add(model);
-					console.log(model.attributes);
 					cleanData(model.attributes,Schemas[model_name]);
-					console.log(model.attributes);
 					model.save({}, {
 						success: function(model, resp) {
 							if (!resp.error) {
