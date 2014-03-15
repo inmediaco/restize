@@ -105,7 +105,7 @@
 
 	exports.init = function(model, options) {
 		var model_name = model.modelName;
-		fields[model_name] = options.fields || [];
+		fields[model_name] = options.fields || {};
 		populate[model_name] = options.populate || [];
 	};
 
@@ -114,14 +114,14 @@
 	//
 	exports.list = function(model, data, callback) {
 		var model_name = model.modelName;
-		model.find(getQuery(model, data), callback).populate(populate[model_name]);
+		model.find(getQuery(model, data),fields[model_name], callback).populate(populate[model_name]);
 	};
 	//------------------------------
 	// Read
 	//
 	exports.read = function(model, data, callback) {
 		var model_name = model.modelName;
-		model.findById(data.id, callback).populate(populate[model_name]);
+		model.findById(data.id, fields[model_name], callback).populate(populate[model_name]);
 	};
 	//------------------------------
 	// Create
