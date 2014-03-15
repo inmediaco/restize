@@ -35,7 +35,10 @@ var Handler = function(model, options, appOptions) {
 	}
 	this.model = model;
 	this.schemaDefinition = null;
-	this.options = options;
+	this.options = {
+		query: {}
+	};
+	Utils.extend(this.options, options);
 	this.appOptions = appOptions;
 	this.adapter.init(model, this.options);
 	this.hooks = {

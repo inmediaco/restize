@@ -230,7 +230,7 @@
 				this.model.on('change', this.render);
 				this.model.on('destroy', this.remove);
 			},
-			render: function(fields, url) {
+			render: function(url) {
 				$(this.el).html(this.template({
 					id: this.model.id,
 					item: this.model.toJSON(),
@@ -294,7 +294,23 @@
 			}
 		});
 
-
+		var cleanData = function(attributes, schema) {
+			if (schema.fields) {
+				_.each(attributes, function(value, name) {
+					if (schema.fields[name].type == 'Object') {
+						cleanData(value, schema[name]);
+					} else if (schema.fields[name].type == 'Array' && schema.fields[name].of.ref) {
+						for (var i = 0; i < value.length; i++) {
+							if (!value[i]) {
+								delete value[i];
+							}
+						};
+					} else if (schema.fields[name].type == 'ObjectId' && !value) {
+						delete attributes[name];
+					}
+				});
+			}
+		};
 
 		var AdminRouter = Backbone.Router.extend({
 			routes: {
@@ -355,6 +371,9 @@
 				submitBtn.click(function() {
 					form.commit();
 					self.collections[model_name].add(model);
+					console.log(model.attributes);
+					cleanData(model.attributes,Schemas[model_name]);
+					console.log(model.attributes);
 					model.save({}, {
 						success: function(model, resp) {
 							if (!resp.error) {
