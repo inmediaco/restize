@@ -57,9 +57,9 @@ exports.post = function(path, method,callback) {
 };
 
 
-exports.register = function(options, callback) {
-	var model = options.model,
-		path, pathWithId;
+exports.register = function(path, options, callback) {
+	var model = options.model;
+	var pathWithId;
 
 	if (!appHandler) {
 		console.log("App is NOT initialized");
@@ -72,7 +72,7 @@ exports.register = function(options, callback) {
 	}
 
 	var modelName = model.name.toLowerCase();
-	options.path = options.path || '/' + modelName;
+	options.path = path || '/' + modelName;
 	pathWithId = options.path + '/:id';
 	console.log('REGISTERING ' + options.path);
 	
@@ -83,7 +83,6 @@ exports.register = function(options, callback) {
 	
 
 	//NOTE: don't change get order
-	//appHandler.get(options.path, handler.auth('list'), handler.list());
 	appHandler.get(options.path, handler.auth('list'), handler.dispatch('list'));
 	appHandler.get(options.path + '/schema', handler.auth('schema'), handler.schema());
 	appHandler.get(pathWithId, handler.auth('read'), handler.dispatch('read'));

@@ -1,7 +1,9 @@
+var util = require('util');
 var path = require('path');
 var fs = require('fs');
 var async = require('async');
 var existsSync = fs.existsSync || path.existsSync;
+
 
 //Utils
 
@@ -45,9 +47,29 @@ var Handler = function(model, options, appOptions) {
 		'pre': {},
 		'post': {}
 	};
+
+	this.buildHook('pre');
+	this.buildHook('post');
 };
 
 
+
+Handler.prototype.buildHook = function(event) {
+	if(this.options && this.options[event]) {
+		for(var method in this.options[event]) {
+			var callback = this.options[event][method];
+			if (util.isArray(callback)) {
+				for(var i=0; callback.length;i++) {
+					this.addCallback(event,method,callback[i]);
+				} 
+			} else if(typeof callback == 'function') {
+				this.addCallback(event,method,callback);
+			} else {
+				throw new Error('Invalid Hook(pre,post) handler');
+			}
+		}
+	}
+};
 
 Handler.prototype.getAdapter = function(options) {
 	var adapterName = options.adapter || 'mongoose';
