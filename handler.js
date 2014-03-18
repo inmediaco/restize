@@ -59,7 +59,7 @@ Handler.prototype.buildHook = function(event) {
 		for(var method in this.options[event]) {
 			var callback = this.options[event][method];
 			if (util.isArray(callback)) {
-				for(var i=0; callback.length;i++) {
+				for(var i=0; i<callback.length;i++) {
 					this.addCallback(event,method,callback[i]);
 				} 
 			} else if(typeof callback == 'function') {
