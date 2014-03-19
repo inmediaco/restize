@@ -1,7 +1,8 @@
 /**
  * Very basic CRUD route creation utility for models.
  * For validation, simply override the model's save method.
- */ (function(exports) {
+ */
+(function(exports) {
 	"use strict";
 
 	var fields = {};
@@ -45,7 +46,9 @@
 					query[p[1]] = condition;
 
 				} else {
-					query[param] = data[param];
+					if(param[0] != '_' || param == '_id'){
+						query[param] = data[param];
+					}
 				}
 			}
 		}
@@ -109,13 +112,46 @@
 		populate[model_name] = options.populate || [];
 	};
 
+
+	function getPagination(data) {
+		var pagination = {};
+		if (data._limit) {
+			pagination.limit = data._limit;
+			if (data._page) {
+				pagination.skip = (data._page - 1) * pagination.limit;
+			}
+		}
+		if (data._sort) {
+			pagination.sort = data._sort;
+		}
+		return pagination;
+	}
+
+
 	//------------------------------
 	// List
 	//
 	exports.list = function(model, data, callback) {
 		var model_name = model.modelName;
-		model.find(getQuery(model, data),fields[model_name], callback).populate(populate[model_name]);
+		var pagination = getPagination(data);
+		model.find(getQuery(model, data), fields[model_name], pagination, cb).populate(populate[model_name]);
 	};
+
+	exports.meta = function(model, data, callback) {
+		var pagination = getPagination(data);
+		model.find(getQuery(model, data), fields[model_name]).count(function(err, result) {
+			if (err) return callback(err);
+			var meta = {
+				total: results.total,
+				count: results.data.length,
+				limit: pagination.limit || "",
+				page: pagination.page || "",
+				sort: pagination.sort || ""
+			};
+			callback(null, meta);
+		});
+	};
+
 	//------------------------------
 	// Read
 	//
@@ -138,7 +174,7 @@
 			delete data._id;
 		}
 		//Dont use findAndUpdate Reason: http://github.com/LearnBoost/mongoose/issues/964
-		model.findById(id, function(err,doc){
+		model.findById(id, function(err, doc) {
 			for (var field in data) {
 				doc[field] = data[field];
 			}
