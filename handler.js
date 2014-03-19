@@ -55,15 +55,15 @@ var Handler = function(model, options, appOptions) {
 
 
 Handler.prototype.buildHook = function(event) {
-	if(this.options && this.options[event]) {
-		for(var method in this.options[event]) {
+	if (this.options && this.options[event]) {
+		for (var method in this.options[event]) {
 			var callback = this.options[event][method];
 			if (util.isArray(callback)) {
-				for(var i=0; i<callback.length;i++) {
-					this.addCallback(event,method,callback[i]);
-				} 
-			} else if(typeof callback == 'function') {
-				this.addCallback(event,method,callback);
+				for (var i = 0; i < callback.length; i++) {
+					this.addCallback(event, method, callback[i]);
+				}
+			} else if (typeof callback == 'function') {
+				this.addCallback(event, method, callback);
 			} else {
 				throw new Error('Invalid Hook(pre,post) handler');
 			}
@@ -101,60 +101,31 @@ Handler.prototype.cleanData = function(data, callback) {
 	});
 };
 
-Handler.prototype.list = function(req, res) {
-	this.adapter.list(this.model, Utils.extend(req.params, req.query, this.options.query || {}), function(err, result) {
-		if (!err) {
-			res.send(result);
-		} else {
-			res.send(Utils.errMsg(err));
-		}
-	});
+
+Handler.prototype.list = function(req, res, callback) {
+	this.adapter.list(this.model, Utils.extend(req.params, req.query, this.options.query || {}), callback);
 };
 
-Handler.prototype.read = function(req, res) {
-	this.adapter.read(this.model, req.params, function(err, result) {
-		if (!err) {
-			res.send(result);
-		} else {
-			res.send(Utils.errMsg(err));
-		}
-	});
+
+Handler.prototype.read = function(req, res, callback) {
+	this.adapter.read(this.model, req.params, callback);
 };
 
-Handler.prototype.create = function(req, res) {
-	this.adapter.create(this.model, req.body, function(err, result) {
-		if (!err) {
-			res.send(result);
-		} else {
-			res.send(Utils.errMsg(err));
-		}
-	});
+
+Handler.prototype.create = function(req, res, callback) {
+	this.adapter.create(this.model, req.body, callback);
 };
 
-Handler.prototype.update = function(req, res) {
+Handler.prototype.update = function(req, res, callback) {
 	var self = this;
 	self.cleanData(req.body, function(data) {
-		self.adapter.update(self.model, req.params.id, data, function(err, result) {
-			if (!err) {
-				res.send(result);
-			} else {
-				res.send(Utils.errMsg(err));
-			}
-		});
-	});	
-};
-
-
-Handler.prototype.destroy = function(req, res) {
-	this.adapter.destroy(this.model, req.params.id, function(err, result) {
-		if (!err) {
-			res.send(result);
-		} else {
-			res.send(Utils.errMsg(err));
-		}
+		self.adapter.update(self.model, req.params.id, data, callback);
 	});
 };
 
+Handler.prototype.destroy = function(req, res) {
+	this.adapter.destroy(this.model, req.params.id, callback);
+};
 
 
 Handler.prototype.schema = function(callback) {
@@ -203,7 +174,6 @@ Handler.prototype.schema = function(callback) {
 	};
 };
 
-
 Handler.prototype.auth = function(method) {
 	if (this.options && (!this.options.no_auth || !this.options.no_auth[method])) {
 		if (typeof this.options.auth == 'function') {
@@ -240,19 +210,39 @@ Handler.prototype.post = function(method, callback) {
 Handler.prototype.dispatch = function(method) {
 	var self = this;
 	return function(req, res) {
-		var hooks = self.hooks.pre[method] || [];
-		async.series(hooks.map(function(fn) {
+		var hpre = self.hooks.pre[method] || [];
+		async.series(hpre.map(function(fn) {
 			return function(cb) {
 				var ctx = {
 					options: self.options,
-					req: req,
-					res: res
+					req: req
 				};
-				fn(ctx,cb);
+				fn(ctx, cb);
 			};
 		}), function(err, data) {
 			if (!err) {
-				self[method](req, res);	
+				var hpost = self.hooks.post[method] || [];
+				self[method](req, res, function(err, result) {
+					result = self.adapter.toObject(result);
+					//Process post hooks
+					async.series(hpost.map(function(fn) {
+						return function(cb) {
+							var ctx = {
+								options: self.options,
+								req: req,
+								res: res,
+								data: result
+							};
+							fn(ctx, cb);
+						};
+					}), function(err, cbdata) {
+						if (!err) {
+							res.send(result);
+						} else {
+							res.send(Utils.errMsg(err));
+						}
+					});
+				});
 			} else {
 				res.send(Utils.errMsg(err));
 			}

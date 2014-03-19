@@ -55,6 +55,7 @@
 		return query;
 	}
 
+	
 	function buildSchema(tree) {
 		var fields = {};
 		for (var name in tree) {
@@ -134,7 +135,7 @@
 	exports.list = function(model, data, callback) {
 		var model_name = model.modelName;
 		var pagination = getPagination(data);
-		model.find(getQuery(model, data), fields[model_name], pagination, cb).populate(populate[model_name]);
+		model.find(getQuery(model, data), fields[model_name], pagination, callback).populate(populate[model_name]);
 	};
 
 	exports.meta = function(model, data, callback) {
@@ -197,4 +198,17 @@
 			fields: buildSchema(model.schema.tree)
 		});
 	};
+	//------------------------------
+	// toObject
+	//
+	exports.toObject = function(doc) {
+		var result = false;
+		//transform objects 
+		if (Array.isArray(doc)) {
+			return doc.map(function(item){
+				return item.toObject();
+			});
+		} 
+		return doc.toObject();	
+	}
 }(exports));
