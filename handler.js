@@ -103,7 +103,16 @@ Handler.prototype.cleanData = function(data, callback) {
 
 
 Handler.prototype.list = function(req, res, callback) {
-	this.adapter.list(this.model, Utils.extend(req.params, req.query, this.options.query || {}), callback);
+	var self = this;
+	var options = Utils.extend(req.params, req.query, this.options.query || {});
+	this.adapter.list(this.model, options, function(err, result) {
+		if (err) return callback(err);
+		self.adapter.meta(self.model, options, function(err, meta) {
+			meta.count = result.length;
+			res.setHeader('Restize-Meta',JSON.stringify(meta));
+			callback(null, result);
+		});
+	});
 };
 
 

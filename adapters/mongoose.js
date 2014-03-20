@@ -46,7 +46,7 @@
 					query[p[1]] = condition;
 
 				} else {
-					if(param[0] != '_' || param == '_id'){
+					if (param[0] != '_' || param == '_id') {
 						query[param] = data[param];
 					}
 				}
@@ -55,7 +55,7 @@
 		return query;
 	}
 
-	
+
 	function buildSchema(tree) {
 		var fields = {};
 		for (var name in tree) {
@@ -139,18 +139,22 @@
 	};
 
 	exports.meta = function(model, data, callback) {
+		var model_name = model.modelName;
 		var pagination = getPagination(data);
-		model.find(getQuery(model, data), fields[model_name]).count(function(err, result) {
-			if (err) return callback(err);
-			var meta = {
-				total: results.total,
-				count: results.data.length,
-				limit: pagination.limit || "",
-				page: pagination.page || "",
-				sort: pagination.sort || ""
-			};
+		var meta = {
+			limit: pagination.limit || "",
+			page: pagination.page || 1,
+			sort: pagination.sort || ""
+		};
+		if (data._limit) {
+			model.find(getQuery(model, data), fields[model_name]).count(function(err, result) {
+				if (err) return callback(err);
+				meta.total = result;
+				callback(null, meta);
+			});
+		} else {
 			callback(null, meta);
-		});
+		}
 	};
 
 	//------------------------------
@@ -205,10 +209,10 @@
 		var result = false;
 		//transform objects 
 		if (Array.isArray(doc)) {
-			return doc.map(function(item){
+			return doc.map(function(item) {
 				return item.toObject();
 			});
-		} 
-		return doc.toObject();	
-	}
+		}
+		return doc.toObject();
+	};
 }(exports));
