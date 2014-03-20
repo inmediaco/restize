@@ -206,6 +206,9 @@
 	// toObject
 	//
 	exports.toObject = function(doc) {
+		if(!doc){
+			return doc;
+		}
 		var result = false;
 		//transform objects 
 		if (Array.isArray(doc)) {

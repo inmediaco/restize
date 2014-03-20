@@ -132,7 +132,7 @@ Handler.prototype.update = function(req, res, callback) {
 	});
 };
 
-Handler.prototype.destroy = function(req, res) {
+Handler.prototype.destroy = function(req, res, callback) {
 	this.adapter.destroy(this.model, req.params.id, callback);
 };
 
@@ -246,7 +246,11 @@ Handler.prototype.dispatch = function(method) {
 						};
 					}), function(err, cbdata) {
 						if (!err) {
-							res.send(result);
+							if (result) {
+								res.send(result);
+							}else{
+								res.send(404);
+							}
 						} else {
 							res.send(Utils.errMsg(err));
 						}
