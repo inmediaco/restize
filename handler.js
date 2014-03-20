@@ -241,29 +241,37 @@ Handler.prototype.dispatch = function(method) {
 			if (!err) {
 				var hpost = self.hooks.post[method] || [];
 				self[method](req, res, function(err, result) {
-					result = self.adapter.toObject(result);
-					//Process post hooks
-					async.series(hpost.map(function(fn) {
-						return function(cb) {
-							var ctx = {
-								options: self.options,
-								req: req,
-								res: res,
-								data: result
+					if (err) {
+						res.status(400);
+						res.send(Utils.errMsg(err));
+					} else {
+						result = self.adapter.toObject(result);
+						//Process post hooks
+						async.series(hpost.map(function(fn) {
+							return function(cb) {
+								var ctx = {
+									options: self.options,
+									req: req,
+									res: res,
+									data: result
+								};
+								fn(ctx, cb);
 							};
-							fn(ctx, cb);
-						};
-					}), function(err, cbdata) {
-						if (!err) {
-							if (result) {
-								res.send(result);
+						}), function(err, cbdata) {
+							if (!err) {
+								if (result) {
+									if (method=='create'){
+										res.status(201);
+									}
+									res.send(result);
+								} else {
+									res.send(404);
+								}
 							} else {
-								res.send(404);
+								res.send(Utils.errMsg(err));
 							}
-						} else {
-							res.send(Utils.errMsg(err));
-						}
-					});
+						});
+					}
 				});
 			} else {
 				res.send(Utils.errMsg(err));
