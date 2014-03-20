@@ -216,9 +216,17 @@ Handler.prototype.post = function(method, callback) {
 	this.addCallback('post', method, callback);
 };
 
+
+Handler.prototype.getIdValidator = function() {
+	return this.adapter.getIdValidator();
+}
+
 Handler.prototype.dispatch = function(method) {
 	var self = this;
 	return function(req, res) {
+		if(req.params[0]) {
+			req.params.id = req.params[0];
+		}
 		var hpre = self.hooks.pre[method] || [];
 		async.series(hpre.map(function(fn) {
 			return function(cb) {

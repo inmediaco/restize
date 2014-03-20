@@ -218,4 +218,13 @@
 		}
 		return doc.toObject();
 	};
+
+	//------------------------------
+	// toObject
+	//
+	exports.getIdValidator = function() {
+		return /([0-9a-fA-F]{24})/;
+	};
+
+
 }(exports));

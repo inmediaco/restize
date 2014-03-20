@@ -17,7 +17,6 @@ exports.init = function(app, options) {
 	appHandler.use('/services', function(req, res) {
 		res.send(services);
 	});
-	
 };
 
 //CROSS middleware
@@ -73,19 +72,18 @@ exports.register = function(path, options, callback) {
 
 	var modelName = model.name.toLowerCase();
 	options.path = path || '/' + modelName;
-	pathWithId = options.path + '/:id';
+	pathWithId = new RegExp(options.path + '/'+'([0-9a-fA-F]{24})');
 	console.log('REGISTERING ' + options.path);
 	
     
 
 	var handler = new Handler(model, options, appOptions);
 
-	
 
-	//NOTE: don't change get order
+	appHandler.get(pathWithId, handler.auth('read'), handler.dispatch('read'));
 	appHandler.get(options.path, handler.auth('list'), handler.dispatch('list'));
 	appHandler.get(options.path + '/schema', handler.auth('schema'), handler.schema());
-	appHandler.get(pathWithId, handler.auth('read'), handler.dispatch('read'));
+	
 
 	appHandler.post(options.path, handler.auth('create'), handler.dispatch('create'));
 	appHandler.put(pathWithId, handler.auth('update'), handler.dispatch('update'));
