@@ -109,7 +109,7 @@ Handler.prototype.list = function(req, res, callback) {
 		if (err) return callback(err);
 		self.adapter.meta(self.model, options, function(err, meta) {
 			meta.count = result.length;
-			res.setHeader('Restize-Meta',JSON.stringify(meta));
+			res.setHeader('Restize-Meta', JSON.stringify(meta));
 			callback(null, result);
 		});
 	});
@@ -219,12 +219,13 @@ Handler.prototype.post = function(method, callback) {
 
 Handler.prototype.getIdValidator = function() {
 	return this.adapter.getIdValidator();
-}
+};
+
 
 Handler.prototype.dispatch = function(method) {
 	var self = this;
 	return function(req, res) {
-		if(req.params[0]) {
+		if (req.params[0]) {
 			req.params.id = req.params[0];
 		}
 		var hpre = self.hooks.pre[method] || [];
@@ -256,7 +257,7 @@ Handler.prototype.dispatch = function(method) {
 						if (!err) {
 							if (result) {
 								res.send(result);
-							}else{
+							} else {
 								res.send(404);
 							}
 						} else {
@@ -264,6 +265,26 @@ Handler.prototype.dispatch = function(method) {
 						}
 					});
 				});
+			} else {
+				res.send(Utils.errMsg(err));
+			}
+		});
+	};
+};
+
+Handler.prototype.admin = function(method) {
+	var self = this;
+	return function(req, res) {
+		if (req.params[0]) {
+			req.params.id = req.params[0];
+		}
+		self[method](req, res, function(err, result) {
+			if (!err) {
+				if (result) {
+					res.send(result);
+				} else {
+					res.send(404);
+				}
 			} else {
 				res.send(Utils.errMsg(err));
 			}
