@@ -79,29 +79,29 @@ exports.register = function(path, options, callback) {
 	options.path = path || '/' + modelName;
 
 	var handler = new Handler(model, options, appOptions);
-	pathWithId = new RegExp(options.path + '/' + handler.getIdValidator());
+	pathWithId = new RegExp('^'+options.path + '/' + handler.getIdValidator()+'$');
 
 
 	// Restize URLs
-	appHandler.get(pathWithId, handler.getMiddlewares('read'), handler.send);
-	appHandler.get(options.path, handler.getMiddlewares('list'), handler.send);
+	appHandler.get(pathWithId, handler.getMiddlewares('read'));
+	appHandler.get(options.path, handler.getMiddlewares('list'));
 	appHandler.get(options.path + '/schema', handler.schema());
-	appHandler.post(options.path, handler.auth('create'), handler.send);
-	appHandler.put(pathWithId, handler.getMiddlewares('update'), handler.send);
-	appHandler.del(pathWithId, handler.getMiddlewares('destroy'), handler.send);
+	appHandler.post(options.path, handler.getMiddlewares('create'));
+	appHandler.put(pathWithId, handler.getMiddlewares('update'));
+	appHandler.del(pathWithId, handler.getMiddlewares('destroy'));
 
 
 	var adminPath = appOptions.admin_base + options.path;
-	var adminPathWithId = new RegExp(adminPath + '/' + handler.getIdValidator());
+	var adminPathWithId = new RegExp('^'+adminPath + '/' + handler.getIdValidator()+'$');
 
 
 	// Admin URLs
-	appHandler.get(adminPath, handler.getMiddlewares('list', true), handler.send);
-	appHandler.get(adminPathWithId, handler.getMiddlewares('read', true), handler.send);
+	appHandler.get(adminPath, handler.getMiddlewares('list', true));
+	appHandler.get(adminPathWithId, handler.getMiddlewares('read', true));
 	appHandler.get(adminPath + '/schema', handler.schema());
-	appHandler.post(adminPath, handler.getMiddlewares('create',true), handler.send);
-	appHandler.put(adminPathWithId, handler.getMiddlewares('update',true), handler.send);
-	appHandler.del(adminPathWithId, handler.getMiddlewares('destroy',true), handler.send);
+	appHandler.post(adminPath, handler.getMiddlewares('create',true));
+	appHandler.put(adminPathWithId, handler.getMiddlewares('update',true));
+	appHandler.del(adminPathWithId, handler.getMiddlewares('destroy',true));
 
 	handlers[options.path] = handler;
 

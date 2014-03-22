@@ -221,11 +221,15 @@ Handler.prototype.buildMiddlewares = function(method) {
 		m = m.concat(this.hooks.post[method]);
 	}
 	m.push(this.errorHandler);
+	m.push(this.send);
 	this.middlewares[method] = m;
 };
 
 
 Handler.prototype.getMiddlewares = function(method, is_admin) {
+	if(is_admin){
+		return [this.defaultMiddleware,this.run(method), this.errorHandler, this.send];
+	}
 	return this.middlewares[method];
 };
 
@@ -254,7 +258,6 @@ Handler.prototype.getIdValidator = function() {
 
 Handler.prototype.errorHandler = function(err, req, res, next) {
 	var message = err.message.split(':');
-	console.log(message);
 	if (message.length > 1) {
 		res.send(message[0], {error: message[1]});
 	} else {
