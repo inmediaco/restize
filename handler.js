@@ -1,7 +1,6 @@
 var util = require('util');
 var path = require('path');
 var fs = require('fs');
-var async = require('async');
 var existsSync = fs.existsSync || path.existsSync;
 
 
@@ -20,7 +19,6 @@ Utils.extend = function(target) {
 };
 
 
-
 var Handler = function(model, options, appOptions) {
 	this.adapter = this.getAdapter(options);
 	if (!this.adapter) {
@@ -34,7 +32,9 @@ var Handler = function(model, options, appOptions) {
 	};
 	Utils.extend(this.options, options);
 	this.appOptions = appOptions;
+	
 	this.adapter.init(model, this.options);
+	
 	this.hooks = {
 		'pre': {},
 		'post': {}
@@ -204,6 +204,7 @@ Handler.prototype.defaultMiddleware = function(req,res,next) {
 	if(req.params[0]) {
 		req.params.id = req.params[0];
 	}
+	req.restize = this.options;
 	next();
 };
 

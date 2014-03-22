@@ -29,9 +29,7 @@
       "email": "andres.herrera@gmail.com"
     }
   ],
-  "dependencies": {
-    "async": "~0.2.10"
-  },
+  "dependencies": {},
   "devDependencies": {},
   "main": "./index.js",
   "engines": {
