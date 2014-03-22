@@ -20,14 +20,6 @@ Utils.extend = function(target) {
 };
 
 
-Utils.errMsg = function(msg) {
-	return {
-		'error': {
-			'message': msg.toString()
-		}
-	};
-};
-
 
 var Handler = function(model, options, appOptions) {
 	this.adapter = this.getAdapter(options);
@@ -48,11 +40,18 @@ var Handler = function(model, options, appOptions) {
 		'post': {}
 	};
 
+	this.middlewares = {};
+
+	this.buildMiddlewares('list');
+	this.buildMiddlewares('read');
+	this.buildMiddlewares('create');
+	this.buildMiddlewares('update');
+	this.buildMiddlewares('destroy');
+
 	this.buildHook('pre');
 	this.buildHook('post');
+
 };
-
-
 
 Handler.prototype.buildHook = function(event) {
 	if (this.options && this.options[event]) {
@@ -137,6 +136,7 @@ Handler.prototype.destroy = function(req, res, callback) {
 };
 
 
+
 Handler.prototype.schema = function(callback) {
 	var self = this;
 	if (callback) {
@@ -194,17 +194,47 @@ Handler.prototype.auth = function(method) {
 	return emptyMiddleware;
 };
 
-function emptyMiddleware(err, req, res, next) {
+function emptyMiddleware(req, res, next) {
 	next();
 }
 
 
+Handler.prototype.defaultMiddleware = function(req,res,next) {
+	req.restize = this.options;
+	if(req.params[0]) {
+		req.params.id = req.params[0];
+	}
+	next();
+};
+
+
+Handler.prototype.buildMiddlewares = function(method) {
+	var m = [
+		this.defaultMiddleware,
+		this.auth(method)
+	];
+	if (this.hooks.pre && this.hooks.pre[method]) {
+		m = m.concat(this.hooks.pre[method]);
+	}
+	m.push(this.run(method));
+	if (this.hooks.post && this.hooks.post[method]) {
+		m = m.concat(this.hooks.post[method]);
+	}
+	m.push(this.errorHandler);
+	this.middlewares[method] = m;
+};
+
+
+Handler.prototype.getMiddlewares = function(method, is_admin) {
+	return this.middlewares[method];
+};
 
 Handler.prototype.addCallback = function(event, method, callback) {
 	if (!this.hooks[event][method]) {
 		this.hooks[event][method] = [];
 	}
 	this.hooks[event][method].push(callback);
+	this.buildMiddlewares(method);
 };
 
 Handler.prototype.pre = function(method, callback) {
@@ -222,82 +252,32 @@ Handler.prototype.getIdValidator = function() {
 };
 
 
-Handler.prototype.dispatch = function(method) {
+Handler.prototype.errorHandler = function(err, req, res, next) {
+	var message = err.message.split(':');
+	console.log(message);
+	if (message.length > 1) {
+		res.send(message[0], {error: message[1]});
+	} else {
+		res.send(400, {error:message[0]});
+	}
+};
+
+
+Handler.prototype.send = function(req, res) {
+	res.send(res.locals.data);
+};
+
+
+Handler.prototype.run = function(method) {
 	var self = this;
-	return function(req, res) {
-		if (req.params[0]) {
-			req.params.id = req.params[0];
-		}
-		var hpre = self.hooks.pre[method] || [];
-		async.series(hpre.map(function(fn) {
-			return function(cb) {
-				var ctx = {
-					options: self.options,
-					req: req
-				};
-				fn(ctx, cb);
-			};
-		}), function(err, data) {
+	return function(req, res, next) {
+		self[method](req, res, function(err, data) {
+			res.locals.error = err;
 			if (!err) {
-				var hpost = self.hooks.post[method] || [];
-				self[method](req, res, function(err, result) {
-					if (err) {
-						res.status(400);
-						res.send(Utils.errMsg(err));
-					} else {
-						result = self.adapter.toObject(result);
-						//Process post hooks
-						async.series(hpost.map(function(fn) {
-							return function(cb) {
-								var ctx = {
-									options: self.options,
-									req: req,
-									res: res,
-									data: result
-								};
-								fn(ctx, cb);
-							};
-						}), function(err, cbdata) {
-							if (!err) {
-								if (result) {
-									if (method=='create'){
-										res.status(201);
-									}
-									res.send(result);
-								} else {
-									res.send(404);
-								}
-							} else {
-								res.send(Utils.errMsg(err));
-							}
-						});
-					}
-				});
-			} else {
-				res.send(Utils.errMsg(err));
+				res.locals.data = self.adapter.toObject(data);
 			}
+			next(err);
 		});
 	};
 };
-
-Handler.prototype.admin = function(method) {
-	var self = this;
-	return function(req, res) {
-		if (req.params[0]) {
-			req.params.id = req.params[0];
-		}
-		self[method](req, res, function(err, result) {
-			if (!err) {
-				if (result) {
-					res.send(result);
-				} else {
-					res.send(404);
-				}
-			} else {
-				res.send(Utils.errMsg(err));
-			}
-		});
-	};
-};
-
 module.exports = Handler;

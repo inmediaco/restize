@@ -147,7 +147,7 @@
 			sort: pagination.sort || ""
 		};
 		if (data._limit) {
-			model.find(getQuery(model, data), fields[model_name]).count(function(err, result) {
+			model.find(getQuery(model, data)).count(function(err, result) {
 				if (err) return callback(err);
 				meta.total = result;
 				callback(null, meta);
@@ -223,7 +223,7 @@
 	// toObject
 	//
 	exports.getIdValidator = function() {
-		return /([0-9a-fA-F]{24})/;
+		return '([0-9a-fA-F]{24})';
 	};
 
 

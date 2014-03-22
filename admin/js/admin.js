@@ -76,7 +76,7 @@
 			deferreds.push(
 				$.getJSON(url, function(schema) {
 					var name = schema.name.toLowerCase();
-					schema.url = schema.url + '/__ADMIN__';
+					schema.url = '.'+schema.url;
 					Schemas[name] = schema;
 					$('#menu').append(
 						$('<li/>').append(
@@ -400,7 +400,7 @@
 
 
 		//Starts app after Model Initialization
-		$.getJSON('/__ADMIN__/services', function(services) {
+		$.getJSON('./services', function(services) {
 			loadModels(services, function() {
 				app = new AdminRouter();
 				Backbone.history.start();

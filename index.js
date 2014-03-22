@@ -1,58 +1,24 @@
 var express = require("express");
-var passport = require('passport');
-var DigestStrategy = require('passport-http').DigestStrategy;
-
 var Handler = require('./handler.js');
 var services = [];
 var handlers = {};
 var adminAuth;
 
-var restize_admins = [];
-
-function findAdmin(username, fn) {
-	for (var i = 0; i < restize_admins.length; i++) {
-		if (restize_admins[i].username === username) {
-			return fn(restize_admins[i]);
-		}
-	}
-	return fn(null);
-}
-
 var appHandler,
 	appOptions;
+
+
+function emptyMiddleware(err, req, res, next) {
+	next();
+}
 
 exports.init = function(app, options) {
 	appHandler = app;
 	appOptions = options || {};
-	restize_admins = options.admins || [];
-
-	//TODO: define url within options
-	appHandler.use('/admin', express.static(__dirname + "/admin"));
-
-	app.use(passport.initialize());
-	// app.use(passport.session());
-
-	passport.use(new DigestStrategy({
-			qop: 'auth'
-		},
-		function(username, done) {
-			findAdmin(username, function(user) {
-				return done(null, user, user ? user.password : null);
-			});
-		},
-		function(params, done) {
-			process.nextTick(function() {
-				return done(null, true);
-			});
-		}
-	));
-
-	adminAuth = passport.authenticate('digest', {
-		session: false
-	});
-
-	//TODO: define url within options
-	appHandler.get('/__ADMIN__/services', adminAuth, function(req, res) {
+	appOptions.admin_base = appOptions.admin_base || '/admin';
+	adminAuth = appOptions.admin_auth || appOptions.auth || emptyMiddleware;
+	appHandler.use('/admin', express.static(__dirname + appOptions.admin_base));
+	appHandler.get(appOptions.admin_base + '/services', adminAuth, function(req, res) {
 		res.send(services);
 	});
 
@@ -111,42 +77,45 @@ exports.register = function(path, options, callback) {
 
 	var modelName = model.name.toLowerCase();
 	options.path = path || '/' + modelName;
-	var adminPath = path  + '/__ADMIN__' || '/' + modelName + '/__ADMIN__';
-	pathWithId = new RegExp(options.path + '/' + '([0-9a-fA-F]{24})');
-	var adminPathWithId = new RegExp(adminPath + '/' + '([0-9a-fA-F]{24})');
-	console.log('REGISTERING ' + options.path);
-
 
 	var handler = new Handler(model, options, appOptions);
+	pathWithId = new RegExp(options.path + '/' + handler.getIdValidator());
+
 
 	// Restize URLs
-	appHandler.get(pathWithId, handler.auth('read'), handler.dispatch('read'));
-	appHandler.get(options.path, handler.auth('list'), handler.dispatch('list'));
-	appHandler.get(options.path + '/schema', handler.auth('schema'), handler.schema());
-	appHandler.post(options.path, handler.auth('create'), handler.dispatch('create'));
-	appHandler.put(pathWithId, handler.auth('update'), handler.dispatch('update'));
-	appHandler.del(pathWithId, handler.auth('destroy'), handler.dispatch('destroy'));
+	appHandler.get(pathWithId, handler.getMiddlewares('read'), handler.send);
+	appHandler.get(options.path, handler.getMiddlewares('list'), handler.send);
+	appHandler.get(options.path + '/schema', handler.schema());
+	appHandler.post(options.path, handler.auth('create'), handler.send);
+	appHandler.put(pathWithId, handler.getMiddlewares('update'), handler.send);
+	appHandler.del(pathWithId, handler.getMiddlewares('destroy'), handler.send);
+
+
+	var adminPath = appOptions.admin_base + options.path;
+	var adminPathWithId = new RegExp(adminPath + '/' + handler.getIdValidator());
+
 
 	// Admin URLs
-	appHandler.get(adminPathWithId, adminAuth, handler.admin('read'));
-	appHandler.get(adminPath, adminAuth, handler.admin('list'));
-	appHandler.get(adminPath + '/schema', adminAuth, handler.schema());
-	appHandler.post(adminPath, adminAuth, handler.admin('create'));
-	appHandler.put(adminPathWithId, adminAuth, handler.admin('update'));
-	appHandler.del(adminPathWithId, adminAuth, handler.admin('destroy'));
+	appHandler.get(adminPath, handler.getMiddlewares('list', true), handler.send);
+	appHandler.get(adminPathWithId, handler.getMiddlewares('read', true), handler.send);
+	appHandler.get(adminPath + '/schema', handler.schema());
+	appHandler.post(adminPath, handler.getMiddlewares('create',true), handler.send);
+	appHandler.put(adminPathWithId, handler.getMiddlewares('update',true), handler.send);
+	appHandler.del(adminPathWithId, handler.getMiddlewares('destroy',true), handler.send);
 
 	handlers[options.path] = handler;
 
 	services.push(
-		options.path + "/__ADMIN__/schema"
+		adminPath + "/schema"
 	);
+
+
+	console.log('REGISTERING ' + options.path);
 
 	//calls schema function
 	if (typeof callback === "function") {
 		handler.schema(callback);
 	}
-
-
 
 	return options.path + "/schema";
 };
