@@ -15,7 +15,7 @@
 		'gt': '$gt',
 		'gte': '$gte',
 		'like': '',
-		'nlike': '',
+		'nlike': '$not',
 		'ne': '$ne',
 		'in': '$in'
 
@@ -40,6 +40,13 @@
 					var operator = opEquivalence[p[2]];
 					if (p[2] == 'in') {
 						condition[operator] = data[param].split(',');
+					} else if (p[2] == 'like') {
+						condition = {
+							'$regex': data[param],
+							'$options': 'i'
+						};
+					} else if (p[2] == 'nlike') {
+						condition[operator] = new RegExp(data[param] + '.*', "i");
 					} else {
 						condition[operator] = data[param];
 					}
@@ -167,8 +174,8 @@
 	//------------------------------
 	// Create
 	//
-	exports.create = function(model, data, callback) {
-		var m = new model(data);
+	exports.create = function(Model, data, callback) {
+		var m = new Model(data);
 		m.save(callback);
 	};
 	//------------------------------
@@ -206,11 +213,11 @@
 	// toObject
 	//
 	exports.toObject = function(doc) {
-		if(!doc){
+		if (!doc) {
 			return doc;
 		}
 		var result = false;
-		//transform objects 
+		//transform objects
 		if (Array.isArray(doc)) {
 			return doc.map(function(item) {
 				return item.toObject();
