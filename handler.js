@@ -54,7 +54,7 @@ Handler.prototype.buildHook = function(event) {
 			} else if (typeof callback == 'function') {
 				this.addCallback(event, method, callback);
 			} else {
-				throw new Error('Invalid Hook(pre,post) handler');
+				throw new Error('Invalid Hook handler: '+event+':'+method);
 			}
 		}
 	}
@@ -259,7 +259,7 @@ Handler.prototype.errorHandler = function(err, req, res, next) {
 		});
 	} else {
 		res.send(400, {
-			error: message[0]
+			error: err.toString()
 		});
 	}
 };
