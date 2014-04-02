@@ -2,21 +2,8 @@ var util = require('util');
 var path = require('path');
 var fs = require('fs');
 var existsSync = fs.existsSync || path.existsSync;
+var Utils = require('./utils.js');
 
-
-//Utils
-
-function Utils() {}
-
-Utils.extend = function(target) {
-	var sources = [].slice.call(arguments, 1);
-	sources.forEach(function(source) {
-		for (var prop in source) {
-			target[prop] = source[prop];
-		}
-	});
-	return target;
-};
 
 
 var Handler = function(model, options, appOptions) {
@@ -27,14 +14,17 @@ var Handler = function(model, options, appOptions) {
 	}
 	this.model = model;
 	this.schemaDefinition = null;
-	this.options = {
-		query: {}
-	};
-	Utils.extend(this.options, options);
 	this.appOptions = appOptions;
-	
+	this.baseOptions = {
+		query: {},
+		fields: {},
+		populate: []
+	};
+
+	Utils.extend(this.baseOptions, options);
+	this.options = Utils.clone(this.baseOptions);
 	this.adapter.init(model, this.options);
-	
+
 	this.hooks = {
 		'pre': {},
 		'post': {}
@@ -199,19 +189,23 @@ function emptyMiddleware(req, res, next) {
 }
 
 
-Handler.prototype.defaultMiddleware = function(req,res,next) {
-	req.restize = this.options;
-	if(req.params[0]) {
-		req.params.id = req.params[0];
-	}
-	req.restize = this.options;
-	next();
+Handler.prototype.defaultMiddleware = function() {
+	var self = this;
+	return function(req, res, next) {
+		if (req.params[0]) {
+			req.params.id = req.params[0];
+		}
+		self.options = Utils.clone(self.baseOptions);
+		req.restize = self.options;
+		next();
+	};
+
 };
 
 
 Handler.prototype.buildMiddlewares = function(method) {
 	var m = [
-		this.defaultMiddleware,
+		this.defaultMiddleware(),
 		this.auth(method)
 	];
 	if (this.hooks.pre && this.hooks.pre[method]) {
@@ -228,8 +222,8 @@ Handler.prototype.buildMiddlewares = function(method) {
 
 
 Handler.prototype.getMiddlewares = function(method, is_admin) {
-	if(is_admin){
-		return [this.defaultMiddleware,this.run(method), this.errorHandler, this.send];
+	if (is_admin) {
+		return [this.defaultMiddleware(), this.run(method), this.errorHandler, this.send];
 	}
 	return this.middlewares[method];
 };
@@ -260,9 +254,13 @@ Handler.prototype.getIdValidator = function() {
 Handler.prototype.errorHandler = function(err, req, res, next) {
 	var message = err.message.split(':');
 	if (message.length > 1) {
-		res.send(message[0], {error: message[1]});
+		res.send(message[0], {
+			error: message[1]
+		});
 	} else {
-		res.send(400, {error:message[0]});
+		res.send(400, {
+			error: message[0]
+		});
 	}
 };
 

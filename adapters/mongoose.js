@@ -116,8 +116,8 @@
 
 	exports.init = function(model, options) {
 		var model_name = model.modelName;
-		fields[model_name] = options.fields || {};
-		populate[model_name] = options.populate || [];
+		fields[model_name] = options.fields;
+		populate[model_name] = options.populate;
 	};
 
 
