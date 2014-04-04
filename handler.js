@@ -273,6 +273,7 @@ Handler.prototype.send = function(req, res) {
 Handler.prototype.run = function(method) {
 	var self = this;
 	return function(req, res, next) {
+		self.adapter.init(self.model,self.options);
 		self[method](req, res, function(err, data) {
 			res.locals.error = err;
 			if (!err) {
