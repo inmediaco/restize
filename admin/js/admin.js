@@ -382,8 +382,11 @@
 									trigger: true
 								});
 							} else {
-								alert("ERROR: " + resp.error.message);
+								alert("ERROR: " + resp.error);
 							}
+						},
+						error: function(model, resp) {
+							alert("ERROR: " + resp.responseText);
 						}
 					});
 				});
