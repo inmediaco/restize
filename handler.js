@@ -116,9 +116,11 @@ Handler.prototype.create = function(req, res, callback) {
 
 Handler.prototype.update = function(req, res, callback) {
 	var self = this;
-	self.cleanData(req.body, function(data) {
-		self.adapter.update(self.model, req.params.id, data, callback);
-	});
+	// This function is comented because we're not sure if it is necessary
+	// self.cleanData(req.body, function(data) {
+		// self.adapter.update(self.model, req.params.id, data, callback);
+		self.adapter.update(self.model, req.params.id, req.body, callback);
+	// });
 };
 
 Handler.prototype.destroy = function(req, res, callback) {
