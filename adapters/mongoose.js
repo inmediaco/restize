@@ -17,7 +17,8 @@
 		'like': '',
 		'nlike': '$not',
 		'ne': '$ne',
-		'in': '$in'
+		'in': '$in',
+		'isnull': ''
 
 	};
 
@@ -34,7 +35,7 @@
 		if (data && Object.keys(data).length) {
 			for (var param in data) {
 				//Tastypie query style
-				var p = param.match(/(.+)__(lt|lte|gt|gte|like|nlike|ne|in)$/);
+				var p = param.match(/(.+)__(lt|lte|gt|gte|like|nlike|ne|in|isnull)$/);
 				if (p && p.length > 0) {
 					var condition = {};
 					var operator = opEquivalence[p[2]];
@@ -47,6 +48,8 @@
 						};
 					} else if (p[2] == 'nlike') {
 						condition[operator] = new RegExp(data[param] + '.*', "i");
+					} else if (p[2] == 'isnull') {
+						condition = null;
 					} else {
 						condition[operator] = data[param];
 					}
