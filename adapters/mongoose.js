@@ -16,10 +16,10 @@
 		'gte': '$gte',
 		'like': '',
 		'nlike': '$not',
-		'ne': '$ne',
+		'ne': '$ne',		
 		'in': '$in',
+		'nin': '$nin',
 		'isnull': ''
-
 	};
 
 	function errMsg(msg) {
@@ -35,11 +35,11 @@
 		if (data && Object.keys(data).length) {
 			for (var param in data) {
 				//Tastypie query style
-				var p = param.match(/(.+)__(lt|lte|gt|gte|like|nlike|ne|in|isnull)$/);
+				var p = param.match(/(.+)__(lt|lte|gt|gte|like|nlike|ne|in|nin|isnull)$/);
 				if (p && p.length > 0) {
 					var condition = {};
 					var operator = opEquivalence[p[2]];
-					if (p[2] == 'in') {
+					if (p[2] == 'in' || p[2] == 'nin') {
 						condition[operator] = data[param].split(',');
 					} else if (p[2] == 'like') {
 						condition = {
