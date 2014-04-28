@@ -152,8 +152,8 @@
 		var model_name = model.modelName;
 		var pagination = getPagination(data);
 		var meta = {
-			limit: pagination.limit || "",
-			page: pagination.page || data._page || 1,
+			limit: parseInt(pagination.limit) || null,
+			page: parseInt(data._page) || 1,
 			sort: pagination.sort || ""
 		};
 		if (data._limit) {
