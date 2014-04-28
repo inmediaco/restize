@@ -153,7 +153,7 @@
 		var pagination = getPagination(data);
 		var meta = {
 			limit: pagination.limit || "",
-			page: pagination.page || 1,
+			page: pagination.page || data._page || 1,
 			sort: pagination.sort || ""
 		};
 		if (data._limit) {
