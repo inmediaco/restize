@@ -30,7 +30,9 @@
     }
   ],
   "dependencies": {},
-  "devDependencies": {},
+  "devDependencies": {
+    "supertest": "~0.12.0"
+  },
   "main": "./index.js",
   "engines": {
     "node": ">=0.8"
