@@ -37,7 +37,7 @@
 				//Tastypie query style
 				var p = param.match(/(.+)__(lt|lte|gt|gte|like|nlike|ne|in|nin|isnull)$/);
 				if (p && p.length > 0) {
-					var condition = {};
+					var condition = query[p[1]] || {};
 					var operator = opEquivalence[p[2]];
 					if (p[2] == 'in' || p[2] == 'nin') {
 						condition[operator] = data[param].split(',');
