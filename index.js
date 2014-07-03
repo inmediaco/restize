@@ -88,7 +88,7 @@ exports.register = function(path, options, callback) {
 	appHandler.get(options.path + '/schema', handler.schema());
 	appHandler.post(options.path, handler.getMiddlewares('create'));
 	appHandler.put(pathWithId, handler.getMiddlewares('update'));
-	appHandler.del(pathWithId, handler.getMiddlewares('destroy'));
+	appHandler.delete(pathWithId, handler.getMiddlewares('destroy'));
 
 
 	var adminPath = appOptions.admin_base + options.path;
@@ -101,7 +101,7 @@ exports.register = function(path, options, callback) {
 	appHandler.get(adminPath + '/schema', handler.schema());
 	appHandler.post(adminPath, handler.getMiddlewares('create',true));
 	appHandler.put(adminPathWithId, handler.getMiddlewares('update',true));
-	appHandler.del(adminPathWithId, handler.getMiddlewares('destroy',true));
+	appHandler.delete(adminPathWithId, handler.getMiddlewares('destroy',true));
 
 	handlers[options.path] = handler;
 
