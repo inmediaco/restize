@@ -255,12 +255,12 @@ Handler.prototype.getIdValidator = function() {
 
 Handler.prototype.errorHandler = function(err, req, res, next) {
 	var message = err.message.split(':');
-	if (message.length > 1) {
-		res.send(message[0], {
+	if (message.length > 1 && typeof message[0] === 'number') {
+		res.status(message[0]).send({
 			error: message[1]
 		});
 	} else {
-		res.send(400, {
+		res.status(400).send({
 			error: err.toString()
 		});
 	}
