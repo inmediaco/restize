@@ -29,7 +29,9 @@
       "email": "andres.herrera@gmail.com"
     }
   ],
-  "dependencies": {},
+  "dependencies": {
+    "express": "^4.12.2"
+  },
   "devDependencies": {
     "supertest": "~0.12.0"
   },
