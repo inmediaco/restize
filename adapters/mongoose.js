@@ -119,7 +119,11 @@
 		for (var i = 0; i < str.length; i++) {
 			var char = str.charAt(i);
 			var reg = defaultDiacriticsRemovalMapSingle[char];
-			n_str += reg;
+			if (reg) {
+				n_str += reg;
+			} else {
+				n_str += char;
+			}
 		}
 		return n_str;
 	}
