@@ -79,7 +79,8 @@ exports.register = function(path, options, callback) {
 	options.path = path || '/' + modelName;
 
 	var handler = new Handler(model, options, appOptions);
-	pathWithId = new RegExp('^'+options.path + '/' + handler.getIdValidator()+'$');
+	//pathWithId = new RegExp('^'+options.path + '/' + handler.getIdValidator()+'$');
+	pathWithId = options.path + '/:id([0-9a-fA-F]{24})'
 
 
 	// Restize URLs
