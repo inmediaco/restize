@@ -244,6 +244,57 @@
 		return pagination;
 	}
 
+	//------------------------------
+	// Aggregate
+	//
+	exports.aggregate = function(model, data, aggregate, callback) {
+		var model_name = model.modelName;
+		var pagination = getPagination(data);
+
+		var opt = [{
+			$group: aggregate
+		}];
+		if (data._limit) {
+			opt.push({
+				$limit: data._limit
+			});
+		}
+		if (data._page) {
+			opt.push({
+				$skip: parseInt(data._page)
+			});
+		}
+		if (data._sort) {
+			opt.push({
+				$sort: data._sort
+			});
+		}
+
+		if (aggregate) {
+			model.aggregate(opt).exec(callback);
+		} else {
+			callback(null, null);
+		}
+	};
+	exports.meta_a = function(model, data, callback) {
+		var model_name = model.modelName;
+		var pagination = getPagination(data);
+		var meta = {
+			limit: parseInt(pagination.limit) || null,
+			page: parseInt(data._page) || 1,
+			sort: pagination.sort || ''
+		};
+		console.log(meta);
+		if (data._limit) {
+			model.find(getQuery(model, data)).count(function(err, result) {
+				if (err) return callback(err);
+				meta.total = result;
+				callback(null, meta);
+			});
+		} else {
+			callback(null, meta);
+		}
+	};
 
 	//------------------------------
 	// List
@@ -328,8 +379,9 @@
 		var result = false;
 		//transform objects
 		if (Array.isArray(doc)) {
+			console.log(doc);
 			return doc.map(function(item) {
-				return item.toObject();
+				return (typeof item.toObject === "function" ? item.toObject() : item);
 			});
 		}
 		return doc.toObject();

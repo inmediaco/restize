@@ -18,7 +18,8 @@ var Handler = function(model, options, appOptions) {
 	this.baseOptions = {
 		query: {},
 		fields: {},
-		populate: []
+		populate: [],
+		aggregate: null
 	};
 
 	Utils.extend(this.baseOptions, options);
@@ -37,6 +38,7 @@ var Handler = function(model, options, appOptions) {
 	this.buildMiddlewares('create');
 	this.buildMiddlewares('update');
 	this.buildMiddlewares('destroy');
+	this.buildMiddlewares('aggregate');
 
 	this.buildHook('pre');
 	this.buildHook('post');
@@ -54,7 +56,7 @@ Handler.prototype.buildHook = function(event) {
 			} else if (typeof callback == 'function') {
 				this.addCallback(event, method, callback);
 			} else {
-				throw new Error('Invalid Hook handler: '+event+':'+method);
+				throw new Error('Invalid Hook handler: ' + event + ':' + method);
 			}
 		}
 	}
@@ -91,6 +93,27 @@ Handler.prototype.cleanData = function(data, callback) {
 };
 
 
+Handler.prototype.aggregate = function(req, res, callback) {
+	var self = this;
+	var options = Utils.extend(req.params, req.query, this.options.query || {});
+	if (this.options.aggregate) {
+		this.adapter.aggregate(this.model, options, this.options.aggregate, function(err, result) {
+			if (err) return callback(err);
+			self.adapter.meta_a(self.model, options, function(err, meta) {
+				meta.count = result.length;
+				res.setHeader('Restize-Meta', JSON.stringify(meta));
+				callback(null, result);
+			});
+		});
+	} else {
+		this.errorHandler({
+			status: 404,
+			message: 'Not found'
+		}, req, res);
+		//callback(null, null);
+	}
+};
+
 Handler.prototype.list = function(req, res, callback) {
 	var self = this;
 	var options = Utils.extend(req.params, req.query, this.options.query || {});
@@ -118,8 +141,8 @@ Handler.prototype.update = function(req, res, callback) {
 	var self = this;
 	// This function is comented because we're not sure if it is necessary
 	// self.cleanData(req.body, function(data) {
-		// self.adapter.update(self.model, req.params.id, data, callback);
-		self.adapter.update(self.model, req.params.id, req.body, callback);
+	// self.adapter.update(self.model, req.params.id, data, callback);
+	self.adapter.update(self.model, req.params.id, req.body, callback);
 	// });
 };
 
@@ -255,7 +278,11 @@ Handler.prototype.getIdValidator = function() {
 
 Handler.prototype.errorHandler = function(err, req, res, next) {
 	var message = err.message.split(':');
-	if (message.length > 1 && typeof message[0] === 'number') {
+	if (err.status) {
+		res.status(err.status).send({
+			error: message
+		});
+	} else if (message.length > 1 && typeof message[0] === 'number') {
 		res.status(message[0]).send({
 			error: message[1]
 		});
@@ -275,7 +302,7 @@ Handler.prototype.send = function(req, res) {
 Handler.prototype.run = function(method) {
 	var self = this;
 	return function(req, res, next) {
-		self.adapter.init(self.model,self.options);
+		self.adapter.init(self.model, self.options);
 		self[method](req, res, function(err, data) {
 			res.locals.error = err;
 			if (!err) {

@@ -60,6 +60,9 @@ exports.post = function(path, method, callback) {
 	return handlers[path] && handlers[path].post(method, callback);
 };
 
+exports.aggregate = function(req, res, options, callback) {
+	handler.aggregate(req, res, options, callback)
+}
 
 exports.register = function(path, options, callback) {
 	var model = options.model;
@@ -86,6 +89,7 @@ exports.register = function(path, options, callback) {
 	// Restize URLs
 	appHandler.get(pathWithId, handler.getMiddlewares('read'));
 	appHandler.get(options.path, handler.getMiddlewares('list'));
+	appHandler.get(options.path + '/group', handler.getMiddlewares('aggregate'));
 	appHandler.get(options.path + '/schema', handler.schema());
 	appHandler.post(options.path, handler.getMiddlewares('create'));
 	appHandler.put(pathWithId, handler.getMiddlewares('update'));
@@ -93,16 +97,16 @@ exports.register = function(path, options, callback) {
 
 
 	var adminPath = appOptions.admin_base + options.path;
-	var adminPathWithId = new RegExp('^'+adminPath + '/' + handler.getIdValidator()+'$');
+	var adminPathWithId = new RegExp('^' + adminPath + '/' + handler.getIdValidator() + '$');
 
 
 	// Admin URLs
 	appHandler.get(adminPath, handler.getMiddlewares('list', true));
 	appHandler.get(adminPathWithId, handler.getMiddlewares('read', true));
 	appHandler.get(adminPath + '/schema', handler.schema());
-	appHandler.post(adminPath, handler.getMiddlewares('create',true));
-	appHandler.put(adminPathWithId, handler.getMiddlewares('update',true));
-	appHandler.delete(adminPathWithId, handler.getMiddlewares('destroy',true));
+	appHandler.post(adminPath, handler.getMiddlewares('create', true));
+	appHandler.put(adminPathWithId, handler.getMiddlewares('update', true));
+	appHandler.delete(adminPathWithId, handler.getMiddlewares('destroy', true));
 
 	handlers[options.path] = handler;
 
