@@ -99,7 +99,7 @@ Handler.prototype.aggregate = function(req, res, callback) {
 	if (this.options.aggregate) {
 		this.adapter.aggregate(this.model, options, this.options.aggregate, function(err, result) {
 			if (err) return callback(err);
-			self.adapter.meta_a(self.model, options, function(err, meta) {
+			self.adapter.meta_a(self.model, options, self.options.aggregate, function(err, meta) {
 				meta.count = result.length;
 				res.setHeader('Restize-Meta', JSON.stringify(meta));
 				callback(null, result);

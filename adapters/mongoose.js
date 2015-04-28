@@ -5,6 +5,8 @@
 (function(exports) {
 	'use strict';
 
+	var mongoose = require('mongoose')
+
 	var fields = {};
 	var populate = {};
 
@@ -233,13 +235,23 @@
 	function getPagination(data) {
 		var pagination = {};
 		if (data._limit) {
-			pagination.limit = data._limit;
+			pagination.limit = parseInt(data._limit);
 			if (data._page) {
-				pagination.skip = (data._page - 1) * pagination.limit;
+				pagination.skip = (parseInt(data._page) - 1) * pagination.limit;
 			}
 		}
 		if (data._sort) {
 			pagination.sort = data._sort;
+			pagination.sortObj = {};
+			var s = data._sort.split(' ');
+			for (var i = 0; i < s.length; i++) {
+				if (s[i][0] === '-') {
+					pagination.sortObj[s[i].replace('-', '')] = -1;
+				} else {
+					pagination.sortObj[s[i]] = 1;
+				}
+			};
+
 		}
 		return pagination;
 	}
@@ -251,22 +263,35 @@
 		var model_name = model.modelName;
 		var pagination = getPagination(data);
 
+		var query = getQuery(model, data);
+
+		for (var x in query) {
+			if (query[x].match(/[0-9a-fA-F]{24}/g)) {
+				query[x] = mongoose.Types.ObjectId(query[x]);
+			}
+		}
+
+
+
+
 		var opt = [{
+			$match: query
+		}, {
 			$group: aggregate
 		}];
-		if (data._limit) {
+		if (data._sort) {
 			opt.push({
-				$limit: data._limit
+				$sort: pagination.sortObj
 			});
 		}
 		if (data._page) {
 			opt.push({
-				$skip: parseInt(data._page)
+				$skip: pagination.skip
 			});
 		}
-		if (data._sort) {
+		if (data._limit) {
 			opt.push({
-				$sort: data._sort
+				$limit: pagination.limit
 			});
 		}
 
@@ -276,7 +301,7 @@
 			callback(null, null);
 		}
 	};
-	exports.meta_a = function(model, data, callback) {
+	exports.meta_a = function(model, data, aggregate, callback) {
 		var model_name = model.modelName;
 		var pagination = getPagination(data);
 		var meta = {
@@ -284,11 +309,14 @@
 			page: parseInt(data._page) || 1,
 			sort: pagination.sort || ''
 		};
-		console.log(meta);
 		if (data._limit) {
-			model.find(getQuery(model, data)).count(function(err, result) {
+			model.aggregate({
+				$group: {
+					_id: aggregate._id
+				}
+			}).exec(function(err, result) {
 				if (err) return callback(err);
-				meta.total = result;
+				meta.total = result.length;
 				callback(null, meta);
 			});
 		} else {
@@ -379,7 +407,6 @@
 		var result = false;
 		//transform objects
 		if (Array.isArray(doc)) {
-			console.log(doc);
 			return doc.map(function(item) {
 				return (typeof item.toObject === "function" ? item.toObject() : item);
 			});
