@@ -21,7 +21,8 @@
 		'ne': '$ne',
 		'in': '$in',
 		'nin': '$nin',
-		'isnull': ''
+		'isnull': '',
+		'size': '$size'
 	};
 
 	var defaultDiacriticsRemovalMapSingle = {
@@ -143,7 +144,7 @@
 		if (data && Object.keys(data).length) {
 			for (var param in data) {
 				//Tastypie query style
-				var p = param.match(/(.+)__(lt|lte|gt|gte|like|nlike|ne|in|nin|isnull)$/);
+				var p = param.match(/(.+)__(lt|lte|gt|gte|like|nlike|ne|in|nin|isnull|empty|nempty|size|sizelt|sizelte|sizegt|sizegte)$/);
 				if (p && p.length > 0) {
 					var condition = query[p[1]] || {};
 					var operator = opEquivalence[p[2]];
@@ -158,6 +159,68 @@
 						condition[operator] = new RegExp(removeDiacritics(data[param]) + '.*', 'i');
 					} else if (p[2] == 'isnull') {
 						condition = null;
+					} else if (p[2] == 'empty') {
+						var c1 = {},
+							c2 = {};
+						condition = [];
+						c1[p[1]] = {
+							$exists: false
+						};
+						c2[p[1]] = {
+							$size: 0
+						};
+						condition.push(c1, c2);
+						p[1] = '$or';
+					} else if (p[2] == 'nempty') {
+						var c1 = {},
+							c2 = {};
+						condition = [];
+						c1[p[1]] = {
+							$exists: true
+						};
+						c2['$where'] = 'this.' + p[1] + '.length > 0';
+						condition.push(c1, c2);
+						p[1] = '$and';
+					} else if (p[2] == 'sizelt') {
+						var c1 = {},
+							c2 = {};
+						condition = [];
+						c1[p[1]] = {
+							$exists: true
+						};
+						c2['$where'] = 'this.' + p[1] + '.length < ' + data[param];
+						condition.push(c1, c2);
+						p[1] = '$and';
+					} else if (p[2] == 'sizelte') {
+						var c1 = {},
+							c2 = {};
+						condition = [];
+						c1[p[1]] = {
+							$exists: true
+						};
+						c2['$where'] = 'this.' + p[1] + '.length <= ' + data[param];
+						condition.push(c1, c2);
+						p[1] = '$and';
+					} else if (p[2] == 'sizegt') {
+						var c1 = {},
+							c2 = {};
+						condition = [];
+						c1[p[1]] = {
+							$exists: true
+						};
+						c2['$where'] = 'this.' + p[1] + '.length > ' + data[param];
+						condition.push(c1, c2);
+						p[1] = '$and';
+					} else if (p[2] == 'sizegte') {
+						var c1 = {},
+							c2 = {};
+						condition = [];
+						c1[p[1]] = {
+							$exists: true
+						};
+						c2['$where'] = 'this.' + p[1] + '.length >= ' + data[param];
+						condition.push(c1, c2);
+						p[1] = '$and';
 					} else {
 						condition[operator] = data[param];
 					}
