@@ -166,9 +166,7 @@
 						c1[p[1]] = {
 							$exists: false
 						};
-						c2[p[1]] = {
-							$size: 0
-						};
+						c2['$where'] = 'this.' + p[1] + '.length === 0';
 						condition.push(c1, c2);
 						p[1] = '$or';
 					} else if (p[2] == 'nempty') {
