@@ -19,6 +19,7 @@ var Handler = function(model, options, appOptions) {
 		query: {},
 		fields: {},
 		populate: [],
+		functionsName: [],
 		aggregate: null
 	};
 

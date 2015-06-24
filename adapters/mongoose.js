@@ -9,6 +9,7 @@
 
 	var fields = {};
 	var populate = {};
+	var functionsName = [];
 
 
 	var opEquivalence = {
@@ -290,6 +291,7 @@
 		var model_name = model.modelName;
 		fields[model_name] = options.fields;
 		populate[model_name] = options.populate;
+		functionsName = options.functionsName;
 	};
 
 
@@ -357,7 +359,14 @@
 		}
 
 		if (aggregate) {
-			model.aggregate(opt).exec(callback);
+			var m = model.aggregate(opt)
+			if (functionsName) {
+				for (var i = 0; i < functionsName.length; i++) {
+					m[functionsName[i]](data);
+				};
+			}
+
+			m.exec(callback);
 		} else {
 			callback(null, null);
 		}
@@ -371,11 +380,18 @@
 			sort: pagination.sort || ''
 		};
 		if (data._limit) {
-			model.aggregate({
+			var m = model.aggregate({
 				$group: {
 					_id: aggregate._id
 				}
-			}).exec(function(err, result) {
+			})
+			if (functionsName) {
+				for (var i = 0; i < functionsName.length; i++) {
+					m[functionsName[i]](data);
+				};
+			}
+
+			m.exec(function(err, result) {
 				if (err) return callback(err);
 				meta.total = result.length;
 				callback(null, meta);
@@ -391,7 +407,19 @@
 	exports.list = function(model, data, callback) {
 		var model_name = model.modelName;
 		var pagination = getPagination(data);
-		model.find(getQuery(model, data), fields[model_name], pagination, callback).populate(populate[model_name]);
+		var m = model.find(getQuery(model, data), fields[model_name], pagination);
+
+		if (functionsName) {
+			for (var i = 0; i < functionsName.length; i++) {
+				m[functionsName[i]](data);
+			};
+		}
+
+		m.populate(populate[model_name])
+			.exec(function(err, result) {
+				if (err) return callback(err);
+				callback(null, result);
+			});
 	};
 
 	exports.meta = function(model, data, callback) {
@@ -403,7 +431,15 @@
 			sort: pagination.sort || ''
 		};
 		if (data._limit) {
-			model.find(getQuery(model, data)).count(function(err, result) {
+			var m = model.find(getQuery(model, data));
+
+			if (functionsName) {
+				for (var i = 0; i < functionsName.length; i++) {
+					m[functionsName[i]](data);
+				};
+			}
+
+			m.count(function(err, result) {
 				if (err) return callback(err);
 				meta.total = result;
 				callback(null, meta);
@@ -418,7 +454,17 @@
 	//
 	exports.read = function(model, data, callback) {
 		var model_name = model.modelName;
-		model.findById(data.id, fields[model_name], callback).populate(populate[model_name]);
+		var m = model.findById(data.id, fields[model_name])
+
+		if (functionsName) {
+			for (var i = 0; i < functionsName.length; i++) {
+				m[functionsName[i]](data);
+			};
+		}
+
+
+		m.populate(populate[model_name])
+			.exec(callback);
 	};
 	//------------------------------
 	// Create
