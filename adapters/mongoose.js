@@ -10,6 +10,7 @@
 	var fields = {};
 	var populate = {};
 	var functionsName = [];
+	var ifCount = true;
 
 
 	var opEquivalence = {
@@ -292,6 +293,7 @@
 		fields[model_name] = options.fields;
 		populate[model_name] = options.populate;
 		functionsName = options.functionsName;
+		ifCount = options.count;
 	};
 
 
@@ -379,7 +381,7 @@
 			page: parseInt(data._page) || 1,
 			sort: pagination.sort || ''
 		};
-		if (data._limit) {
+		if (ifCount) {
 			var m = model.aggregate({
 				$group: {
 					_id: aggregate._id
@@ -430,7 +432,7 @@
 			page: parseInt(data._page) || 1,
 			sort: pagination.sort || ''
 		};
-		if (data._limit) {
+		if (ifCount) {
 			var m = model.find(getQuery(model, data));
 
 			if (functionsName) {

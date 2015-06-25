@@ -20,6 +20,7 @@ var Handler = function(model, options, appOptions) {
 		fields: {},
 		populate: [],
 		functionsName: [],
+		count: true,
 		aggregate: null
 	};
 
