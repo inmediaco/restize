@@ -48,7 +48,7 @@
 	"readme": "restize\n=======\n\nInsanely easy API generator and publisher for Node JS\n",
 	"readmeFilename": "README.md",
 	"_id": "restize@0.6.1",
-	"_shasum": "31cad0303373ee0b915c885c8a7938793028abab",
-	"_resolved": "git://github.com/inmediaco/restize.git#31cad0303373ee0b915c885c8a7938793028abab",
+	"_shasum": "265755895124852239a179835404c44af7acb6f7",
+	"_resolved": "git://github.com/inmediaco/restize.git#265755895124852239a179835404c44af7acb6f7",
 	"_from": "restize@git://github.com/inmediaco/restize.git"
 }
