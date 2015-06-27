@@ -364,7 +364,7 @@
 			var m = model.aggregate(opt)
 			if (functionsName) {
 				for (var i = 0; i < functionsName.length; i++) {
-					m[functionsName[i]](data);
+					m[functionsName[i]]();
 				};
 			}
 
@@ -389,7 +389,7 @@
 			})
 			if (functionsName) {
 				for (var i = 0; i < functionsName.length; i++) {
-					m[functionsName[i]](data);
+					m[functionsName[i]]();
 				};
 			}
 
@@ -413,7 +413,7 @@
 
 		if (functionsName) {
 			for (var i = 0; i < functionsName.length; i++) {
-				m[functionsName[i]](data);
+				m[functionsName[i]]();
 			};
 		}
 
@@ -437,7 +437,7 @@
 
 			if (functionsName) {
 				for (var i = 0; i < functionsName.length; i++) {
-					m[functionsName[i]](data);
+					m[functionsName[i]]();
 				};
 			}
 
@@ -460,7 +460,7 @@
 
 		if (functionsName) {
 			for (var i = 0; i < functionsName.length; i++) {
-				m[functionsName[i]](data);
+				m[functionsName[i]]();
 			};
 		}
 
