@@ -284,7 +284,7 @@ Handler.prototype.errorHandler = function(err, req, res, next) {
 		res.status(err.status).send({
 			error: message
 		});
-	} else if (message.length > 1 && typeof message[0] === 'number') {
+	} else if (message.length > 1 && typeof parseInt(message[0]) === 'number') {
 		res.status(message[0]).send({
 			error: message[1]
 		});
