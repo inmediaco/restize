@@ -5,7 +5,7 @@
 (function(exports) {
 	'use strict';
 
-	var mongoose = require('mongoose')
+	var mongoose = require('mongoose');
 
 	var fields = {};
 	var populate = {};
@@ -117,7 +117,7 @@
 	};
 
 	function removeDiacritics(str) {
-		var n_str = ''
+		var n_str = '';
 		for (var x in defaultDiacriticsRemovalMapSingle) {
 			str = str.replace(new RegExp(defaultDiacriticsRemovalMapSingle[x], 'g'), x);
 		}
@@ -150,6 +150,8 @@
 				if (p && p.length > 0) {
 					var condition = query[p[1]] || {};
 					var operator = opEquivalence[p[2]];
+					var c1 = {},
+						c2 = {};
 					if (p[2] == 'in' || p[2] == 'nin') {
 						condition[operator] = data[param].split(',');
 					} else if (p[2] == 'like') {
@@ -162,63 +164,63 @@
 					} else if (p[2] == 'isnull') {
 						condition = null;
 					} else if (p[2] == 'empty') {
-						var c1 = {},
-							c2 = {};
+						c1 = {};
+						c2 = {};
 						condition = [];
 						c1[p[1]] = {
 							$exists: false
 						};
-						c2['$where'] = 'this.' + p[1] + '.length === 0';
+						c2.$where = 'this.' + p[1] + '.length === 0';
 						condition.push(c1, c2);
 						p[1] = '$or';
 					} else if (p[2] == 'nempty') {
-						var c1 = {},
-							c2 = {};
+						c1 = {};
+						c2 = {};
 						condition = [];
 						c1[p[1]] = {
 							$exists: true
 						};
-						c2['$where'] = 'this.' + p[1] + '.length > 0';
+						c2.$where = 'this.' + p[1] + '.length > 0';
 						condition.push(c1, c2);
 						p[1] = '$and';
 					} else if (p[2] == 'sizelt') {
-						var c1 = {},
-							c2 = {};
+						c1 = {};
+						c2 = {};
 						condition = [];
 						c1[p[1]] = {
 							$exists: true
 						};
-						c2['$where'] = 'this.' + p[1] + '.length < ' + data[param];
+						c2.$where = 'this.' + p[1] + '.length < ' + data[param];
 						condition.push(c1, c2);
 						p[1] = '$and';
 					} else if (p[2] == 'sizelte') {
-						var c1 = {},
-							c2 = {};
+						c1 = {};
+						c2 = {};
 						condition = [];
 						c1[p[1]] = {
 							$exists: true
 						};
-						c2['$where'] = 'this.' + p[1] + '.length <= ' + data[param];
+						c2.$where = 'this.' + p[1] + '.length <= ' + data[param];
 						condition.push(c1, c2);
 						p[1] = '$and';
 					} else if (p[2] == 'sizegt') {
-						var c1 = {},
-							c2 = {};
+						c1 = {};
+						c2 = {};
 						condition = [];
 						c1[p[1]] = {
 							$exists: true
 						};
-						c2['$where'] = 'this.' + p[1] + '.length > ' + data[param];
+						c2.$where = 'this.' + p[1] + '.length > ' + data[param];
 						condition.push(c1, c2);
 						p[1] = '$and';
 					} else if (p[2] == 'sizegte') {
-						var c1 = {},
-							c2 = {};
+						c1 = {};
+						c2 = {};
 						condition = [];
 						c1[p[1]] = {
 							$exists: true
 						};
-						c2['$where'] = 'this.' + p[1] + '.length >= ' + data[param];
+						c2.$where = 'this.' + p[1] + '.length >= ' + data[param];
 						condition.push(c1, c2);
 						p[1] = '$and';
 					} else {
@@ -315,7 +317,7 @@
 				} else {
 					pagination.sortObj[s[i]] = 1;
 				}
-			};
+			}
 
 		}
 		return pagination;
@@ -361,11 +363,11 @@
 		}
 
 		if (aggregate) {
-			var m = model.aggregate(opt)
+			var m = model.aggregate(opt);
 			if (functionsName) {
 				for (var i = 0; i < functionsName.length; i++) {
 					m[functionsName[i]]();
-				};
+				}
 			}
 
 			m.exec(callback);
@@ -386,11 +388,11 @@
 				$group: {
 					_id: aggregate._id
 				}
-			})
+			});
 			if (functionsName) {
 				for (var i = 0; i < functionsName.length; i++) {
 					m[functionsName[i]]();
-				};
+				}
 			}
 
 			m.exec(function(err, result) {
@@ -414,7 +416,7 @@
 		if (functionsName) {
 			for (var i = 0; i < functionsName.length; i++) {
 				m[functionsName[i]]();
-			};
+			}
 		}
 
 		m.populate(populate[model_name])
@@ -438,7 +440,7 @@
 			if (functionsName) {
 				for (var i = 0; i < functionsName.length; i++) {
 					m[functionsName[i]]();
-				};
+				}
 			}
 
 			m.count(function(err, result) {
@@ -456,12 +458,12 @@
 	//
 	exports.read = function(model, data, callback) {
 		var model_name = model.modelName;
-		var m = model.findById(data.id, fields[model_name])
+		var m = model.findById(data.id, fields[model_name]);
 
 		if (functionsName) {
 			for (var i = 0; i < functionsName.length; i++) {
 				m[functionsName[i]]();
-			};
+			}
 		}
 
 
@@ -532,3 +534,4 @@
 
 
 }(exports));
+

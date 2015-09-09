@@ -43,6 +43,8 @@ exports.allowCrossDomain = function(req, res, next) {
 		res.header('Access-Control-Max-Age', 60 * 60 * 24 * 365);
 	}
 
+	res.header('Access-Control-Expose-Headers', 'Restize-Meta');
+
 	// intercept OPTIONS method
 	if (oneof && req.method == 'OPTIONS') {
 		res.sendStatus(200);
@@ -61,8 +63,8 @@ exports.post = function(path, method, callback) {
 };
 
 exports.aggregate = function(req, res, options, callback) {
-	handler.aggregate(req, res, options, callback)
-}
+	handler.aggregate(req, res, options, callback);
+};
 
 exports.register = function(path, options, callback) {
 	var model = options.model;
@@ -83,7 +85,7 @@ exports.register = function(path, options, callback) {
 
 	var handler = new Handler(model, options, appOptions);
 	//pathWithId = new RegExp('^'+options.path + '/' + handler.getIdValidator()+'$');
-	pathWithId = options.path + '/:id([0-9a-fA-F]{24})'
+	pathWithId = options.path + '/:id([0-9a-fA-F]{24})';
 
 
 	// Restize URLs
@@ -124,3 +126,4 @@ exports.register = function(path, options, callback) {
 
 	return options.path + "/schema";
 };
+
