@@ -279,20 +279,7 @@ Handler.prototype.getIdValidator = function() {
 
 
 Handler.prototype.errorHandler = function(err, req, res, next) {
-	var message = err.message.split(':');
-	if (err.status) {
-		res.status(err.status).send({
-			error: message
-		});
-	} else if (message.length > 1 && typeof parseInt(message[0]) === 'number') {
-		res.status(message[0]).send({
-			error: message[1]
-		});
-	} else {
-		res.status(400).send({
-			error: err.toString()
-		});
-	}
+	res.status(400).send({name: err.name || 'DATABASE', code: err.code, message: err.message});
 };
 
 
