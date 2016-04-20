@@ -6,6 +6,7 @@
 	'use strict';
 
 	var mongoose = require('mongoose');
+	var _ = require('lodash');
 
 	var fields = {};
 	var populate = {};
@@ -140,6 +141,20 @@
 			}
 		};
 	}
+
+	function deepSet(obj1, obj2, deep) {
+		if (!deep) {
+			deep = '';
+		}
+		for (var x in obj2) {
+			if (_.isObject(obj2[x])) {
+				deepSet(obj1, obj2[x], deep + x + '.');
+			} else {
+				_.set(obj1, deep + x, obj2[x]);
+			}
+		}
+	};
+
 
 	function getQuery(model, data) {
 		var query = {};
@@ -486,9 +501,7 @@
 		}
 		//Dont use findAndUpdate Reason: http://github.com/LearnBoost/mongoose/issues/964
 		model.findById(id, function(err, doc) {
-			for (var field in data) {
-				doc[field] = data[field];
-			}
+			deepSet(doc, data);
 			doc.save(callback);
 		});
 	};
