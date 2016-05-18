@@ -1,7 +1,7 @@
 {
 	"name": "restize",
 	"description": "Insanely easy API generator and publisher for Node JS",
-	"version": "0.6.4",
+	"version": "0.6.5",
 	"author": {
 		"name": "German Gonzalez",
 		"email": "restize@inmedia.co"
@@ -48,7 +48,7 @@
 	"homepage": "https://github.com/inmediaco/restize",
 	"readme": "restize\n=======\n\nInsanely easy API generator and publisher for Node JS\n",
 	"readmeFilename": "README.md",
-	"_id": "restize@0.6.4",
+	"_id": "restize@0.6.5",
 	"_resolved": "git://github.com/inmediaco/restize.git",
 	"_from": "restize@git://github.com/inmediaco/restize.git"
 }
