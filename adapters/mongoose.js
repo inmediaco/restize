@@ -501,7 +501,9 @@
 		}
 		//Dont use findAndUpdate Reason: http://github.com/LearnBoost/mongoose/issues/964
 		model.findById(id, function(err, doc) {
-			deepSet(doc, data);
+			for (var field in data) {
+				doc[field] = data[field];
+			}
 			doc.save(callback);
 		});
 	};
@@ -547,4 +549,3 @@
 
 
 }(exports));
-
