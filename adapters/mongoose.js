@@ -485,6 +485,8 @@
 			}
 		}
 
+		if (readPreference[model_name]) m.read(readPreference[model_name].rs);
+
 
 		m.populate(populate[model_name])
 			.exec(callback);
