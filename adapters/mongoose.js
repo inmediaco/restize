@@ -12,6 +12,7 @@
 	var populate = {};
 	var functionsName = [];
 	var ifCount = true;
+	var readPreference = {};
 
 
 	var opEquivalence = {
@@ -311,6 +312,7 @@
 		populate[model_name] = options.populate;
 		functionsName = options.functionsName;
 		ifCount = options.count;
+		readPreference[model_name] = options.readPreference;
 	};
 
 
@@ -433,6 +435,8 @@
 				m[functionsName[i]]();
 			}
 		}
+
+		if (readPreference[model_name]) m.read(readPreference[model_name].rs);
 
 		m.populate(populate[model_name])
 			.exec(function(err, result) {
