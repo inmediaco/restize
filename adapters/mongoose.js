@@ -12,6 +12,10 @@
 	var populate = {};
 	var functionsName = [];
 	var ifCount = true;
+	var readPreference = {};
+	var aggregateOptions = {};
+	var cacheSettings = {};
+
 
 
 	var opEquivalence = {
@@ -250,6 +254,12 @@
 				}
 			}
 		}
+		for (var x in query) {
+			if (query[x]['$lte']) query[x]['$lte'] = new Date(query[x]['$lte']);
+			if (query[x]['$gte']) query[x]['$gte'] = new Date(query[x]['$gte']);
+			if (query[x]['$gt']) query[x]['$gt'] = new Date(query[x]['$gt']);
+			if (query[x]['$lt']) query[x]['$lt'] = new Date(query[x]['$lt']);
+		}
 		return query;
 	}
 
@@ -311,6 +321,9 @@
 		populate[model_name] = options.populate;
 		functionsName = options.functionsName;
 		ifCount = options.count;
+		readPreference[model_name] = options.readPreference;
+		aggregateOptions[model_name] = options.aggregateOptions;
+		cacheSettings[model_name] = options.cacheSettings;
 	};
 
 
@@ -342,25 +355,36 @@
 	// Aggregate
 	//
 	exports.aggregate = function(model, data, aggregate, callback) {
+		var getObjetForProjection = function(string) {
+			var objectKeys = string.split(" ");
+			var obj = {};
+			objectKeys.forEach(function(object) {
+				if (object) obj[object] = 1;
+			});
+			return obj;
+		};
 		var model_name = model.modelName;
 		var pagination = getPagination(data);
-
 		var query = getQuery(model, data);
-
-		for (var x in query) {
-			if (query[x].match(/[0-9a-fA-F]{24}/g)) {
-				query[x] = mongoose.Types.ObjectId(query[x]);
-			}
-		}
-
-
-
+		var projectionObject = getObjetForProjection(fields[model_name]);
 
 		var opt = [{
-			$match: query
+			$match: {
+				$and: []
+			}
 		}, {
-			$group: aggregate
+			$unwind: aggregate
+		}, {
+			$project: projectionObject
+		}, {
+			$match: {
+				$and: []
+			}
 		}];
+
+		opt[0]['$match']['$and'].push(query);
+		opt[3]['$match']['$and'].push(query);
+
 		if (data._sort) {
 			opt.push({
 				$sort: pagination.sortObj
@@ -376,15 +400,10 @@
 				$limit: pagination.limit
 			});
 		}
-
 		if (aggregate) {
 			var m = model.aggregate(opt);
-			if (functionsName) {
-				for (var i = 0; i < functionsName.length; i++) {
-					m[functionsName[i]]();
-				}
-			}
-
+			if (readPreference[model_name]) m.read(readPreference[model_name].rs);
+			if (cacheSettings[model_name]) m.cache(cacheSettings[model_name].time);
 			m.exec(callback);
 		} else {
 			callback(null, null);
@@ -393,28 +412,40 @@
 	exports.meta_a = function(model, data, aggregate, callback) {
 		var model_name = model.modelName;
 		var pagination = getPagination(data);
+		var query = getQuery(model, data);
 		var meta = {
 			limit: parseInt(pagination.limit) || null,
 			page: parseInt(data._page) || 1,
 			sort: pagination.sort || ''
 		};
 		if (ifCount) {
-			var m = model.aggregate({
+			var opt = [{
+				$match: {
+					$and: []
+				}
+			}, {
+				$unwind: aggregate
+			}, {
+				$match: {
+					$and: []
+				}
+			}, {
 				$group: {
-					_id: aggregate._id
+					_id: null,
+					count: {
+						$sum: 1
+					}
 				}
-			});
-			if (functionsName) {
-				for (var i = 0; i < functionsName.length; i++) {
-					m[functionsName[i]]();
-				}
-			}
-
+			}];
+			opt[0]['$match']['$and'].push(query);
+			opt[2]['$match']['$and'].push(query);
+			var m = model.aggregate(opt);
 			m.exec(function(err, result) {
 				if (err) return callback(err);
-				meta.total = result.length;
+				meta.total = result[0].count;
 				callback(null, meta);
 			});
+
 		} else {
 			callback(null, meta);
 		}
@@ -426,6 +457,7 @@
 	exports.list = function(model, data, callback) {
 		var model_name = model.modelName;
 		var pagination = getPagination(data);
+
 		var m = model.find(getQuery(model, data), fields[model_name], pagination);
 
 		if (functionsName) {
@@ -433,6 +465,9 @@
 				m[functionsName[i]]();
 			}
 		}
+
+		if (readPreference[model_name]) m.read(readPreference[model_name].rs);
+		if (cacheSettings[model_name]) m.cache(cacheSettings[model_name].time);
 
 		m.populate(populate[model_name])
 			.exec(function(err, result) {
@@ -481,6 +516,8 @@
 			}
 		}
 
+		if (readPreference[model_name]) m.read(readPreference[model_name].rs);
+
 
 		m.populate(populate[model_name])
 			.exec(callback);
@@ -501,7 +538,9 @@
 		}
 		//Dont use findAndUpdate Reason: http://github.com/LearnBoost/mongoose/issues/964
 		model.findById(id, function(err, doc) {
-			deepSet(doc, data);
+			for (var field in data) {
+				doc[field] = data[field];
+			}
 			doc.save(callback);
 		});
 	};
@@ -547,4 +586,3 @@
 
 
 }(exports));
-
