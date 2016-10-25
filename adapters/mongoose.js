@@ -12,6 +12,11 @@
 	var populate = {};
 	var functionsName = [];
 	var ifCount = true;
+	var readPreference = {};
+	var aggregateOptions = {};
+	var cacheSettings = {};
+	var predefinedQueries = {};
+
 
 
 	var opEquivalence = {
@@ -155,8 +160,17 @@
 		}
 	};
 
+	function getObjetForProjection(string) {
+		var objectKeys = string.split(" ");
+		var obj = {};
+		objectKeys.forEach(function(object) {
+			if (object) obj[object] = 1;
+		});
+		return obj;
+	};
 
-	function getQuery(model, data) {
+
+	function getQuery(model, data, aggregate, predefinedQueries, step) {
 		var query = {};
 		if (data && Object.keys(data).length) {
 			for (var param in data) {
@@ -250,6 +264,36 @@
 				}
 			}
 		}
+
+		//change this to parse if is date
+
+		for (var x in query) {
+			if (query[x]['$lte'] && isNaN(query[x]['$lte'])) query[x]['$lte'] = new Date(query[x]['$lte']);
+			if (query[x]['$gte'] && isNaN(query[x]['$gte'])) query[x]['$gte'] = new Date(query[x]['$gte']);
+			if (query[x]['$gt'] && isNaN(query[x]['$gt'])) query[x]['$gt'] = new Date(query[x]['$gt']);
+			if (query[x]['$lt'] && isNaN(query[x]['$lt'])) query[x]['$lt'] = new Date(query[x]['$lt']);
+		}
+
+		if (predefinedQueries && predefinedQueries[data['_predefined']]) {
+
+			var newQuery = predefinedQueries[data['_predefined']][step];
+			//allow for dynamic filters
+			for (var x in query) {
+				if (x === 'address.city.code') {
+					if (newQuery['$or']) {
+						newQuery['$or'].forEach(function(orquery) {
+							orquery['$and'][0]['address.city.code'] = query[x];
+						});
+					} else
+						newQuery['$and'][0]['address.city.code'] = query[x];
+				}
+			}
+			query = newQuery;
+		} else { //if it is an aggregate put everyting in an $and
+			if (aggregate) query = {
+				$and: [query]
+			}
+		}
 		return query;
 	}
 
@@ -311,6 +355,10 @@
 		populate[model_name] = options.populate;
 		functionsName = options.functionsName;
 		ifCount = options.count;
+		readPreference[model_name] = options.readPreference;
+		aggregateOptions[model_name] = options.aggregateOptions;
+		cacheSettings[model_name] = options.cacheSettings;
+		predefinedQueries[model_name] = options.predefinedQueries;
 	};
 
 
@@ -342,25 +390,34 @@
 	// Aggregate
 	//
 	exports.aggregate = function(model, data, aggregate, callback) {
+
 		var model_name = model.modelName;
 		var pagination = getPagination(data);
 
-		var query = getQuery(model, data);
+		var query = getQuery(model, data, true, predefinedQueries[model_name], 'first');
+		var secondQuery = getQuery(model, data, true, predefinedQueries[model_name], 'second');
 
-		for (var x in query) {
-			if (query[x].match(/[0-9a-fA-F]{24}/g)) {
-				query[x] = mongoose.Types.ObjectId(query[x]);
-			}
+		var projectionObject = getObjetForProjection(fields[model_name]);
+
+		if (aggregate.extraFields) {
+			aggregate.extraFields.forEach(function(extra, key) {
+				projectionObject[extra.name] = extra.filter
+			})
 		}
 
-
-
-
 		var opt = [{
-			$match: query
+			$match: {}
 		}, {
-			$group: aggregate
+			$unwind: aggregate.object
+		}, {
+			$project: projectionObject
+		}, {
+			$match: {}
 		}];
+
+		opt[0]['$match'] = query;
+		opt[3]['$match'] = secondQuery;
+
 		if (data._sort) {
 			opt.push({
 				$sort: pagination.sortObj
@@ -379,42 +436,60 @@
 
 		if (aggregate) {
 			var m = model.aggregate(opt);
-			if (functionsName) {
-				for (var i = 0; i < functionsName.length; i++) {
-					m[functionsName[i]]();
-				}
-			}
-
+			if (readPreference[model_name]) m.read(readPreference[model_name].rs);
+			if (cacheSettings[model_name]) m.cache(cacheSettings[model_name].time);
 			m.exec(callback);
 		} else {
 			callback(null, null);
 		}
 	};
+
 	exports.meta_a = function(model, data, aggregate, callback) {
 		var model_name = model.modelName;
 		var pagination = getPagination(data);
+		var query = getQuery(model, data, true, predefinedQueries[model_name], 'first');
+		var secondQuery = getQuery(model, data, true, predefinedQueries[model_name], 'second');
+
+
+		var projectionObject = getObjetForProjection(fields[model_name]);
+
+		if (aggregate.extraFields) {
+			aggregate.extraFields.forEach(function(extra, key) {
+				projectionObject[extra.name] = extra.filter
+			})
+		}
+
 		var meta = {
 			limit: parseInt(pagination.limit) || null,
 			page: parseInt(data._page) || 1,
 			sort: pagination.sort || ''
 		};
 		if (ifCount) {
-			var m = model.aggregate({
+			var opt = [{
+				$match: {}
+			}, {
+				$unwind: aggregate.object
+			}, {
+				$project: projectionObject
+			}, {
+				$match: {}
+			}, {
 				$group: {
-					_id: aggregate._id
+					_id: null,
+					count: {
+						$sum: 1
+					}
 				}
-			});
-			if (functionsName) {
-				for (var i = 0; i < functionsName.length; i++) {
-					m[functionsName[i]]();
-				}
-			}
-
+			}];
+			opt[0]['$match'] = query;
+			opt[3]['$match'] = secondQuery;
+			var m = model.aggregate(opt);
 			m.exec(function(err, result) {
 				if (err) return callback(err);
-				meta.total = result.length;
+				meta.total = result[0] ? result[0].count : 0;
 				callback(null, meta);
 			});
+
 		} else {
 			callback(null, meta);
 		}
@@ -426,6 +501,7 @@
 	exports.list = function(model, data, callback) {
 		var model_name = model.modelName;
 		var pagination = getPagination(data);
+
 		var m = model.find(getQuery(model, data), fields[model_name], pagination);
 
 		if (functionsName) {
@@ -433,6 +509,9 @@
 				m[functionsName[i]]();
 			}
 		}
+
+		if (readPreference[model_name]) m.read(readPreference[model_name].rs);
+		if (cacheSettings[model_name]) m.cache(cacheSettings[model_name].time);
 
 		m.populate(populate[model_name])
 			.exec(function(err, result) {
@@ -481,6 +560,8 @@
 			}
 		}
 
+		if (readPreference[model_name]) m.read(readPreference[model_name].rs);
+
 
 		m.populate(populate[model_name])
 			.exec(callback);
@@ -501,7 +582,9 @@
 		}
 		//Dont use findAndUpdate Reason: http://github.com/LearnBoost/mongoose/issues/964
 		model.findById(id, function(err, doc) {
-			deepSet(doc, data);
+			for (var field in data) {
+				doc[field] = data[field];
+			}
 			doc.save(callback);
 		});
 	};
@@ -547,4 +630,3 @@
 
 
 }(exports));
-
