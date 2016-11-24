@@ -161,24 +161,33 @@
 		if (data && Object.keys(data).length) {
 			for (var param in data) {
 				//Tastypie query style
-				var p = param.match(/(.+)__(lt|lte|gt|gte|like|nlike|ne|in|nin|isnull|empty|nempty|size|sizelt|sizelte|sizegt|sizegte)$/);
+				var p = param.match(/(.+)__(lt|lte|gt|gte|like|nlike|ne|in|nin|isnull|empty|nempty|size|sizelt|sizelte|sizegt|sizegte|between)$/);
 				if (p && p.length > 0) {
 					var condition = query[p[1]] || {};
 					var operator = opEquivalence[p[2]];
 					var c1 = {},
 						c2 = {};
-					if (p[2] == 'in' || p[2] == 'nin') {
+					if (p[2] === 'in' || p[2] === 'nin') {
 						condition[operator] = data[param].split(',');
-					} else if (p[2] == 'like') {
+					} else if (p[2] === 'between') {
+						var b = data[param].split(',');
+						c1 = {};
+						condition = {
+							$gte: b[0]
+						};
+						if(b[1]){
+							condition.$lte = b[1];
+						}
+					} else if (p[2] === 'like') {
 						condition = {
 							'$regex': removeDiacritics(data[param]),
 							'$options': 'i'
 						};
-					} else if (p[2] == 'nlike') {
+					} else if (p[2] === 'nlike') {
 						condition[operator] = new RegExp(removeDiacritics(data[param]) + '.*', 'i');
-					} else if (p[2] == 'isnull') {
+					} else if (p[2] === 'isnull') {
 						condition = null;
-					} else if (p[2] == 'empty') {
+					} else if (p[2] === 'empty') {
 						c1 = {};
 						c2 = {};
 						condition = [];
@@ -188,7 +197,7 @@
 						c2.$where = 'this.' + p[1] + '.length === 0';
 						condition.push(c1, c2);
 						p[1] = '$or';
-					} else if (p[2] == 'nempty') {
+					} else if (p[2] === 'nempty') {
 						c1 = {};
 						c2 = {};
 						condition = [];
@@ -198,7 +207,7 @@
 						c2.$where = 'this.' + p[1] + '.length > 0';
 						condition.push(c1, c2);
 						p[1] = '$and';
-					} else if (p[2] == 'sizelt') {
+					} else if (p[2] === 'sizelt') {
 						c1 = {};
 						c2 = {};
 						condition = [];
@@ -208,7 +217,7 @@
 						c2.$where = 'this.' + p[1] + '.length < ' + data[param];
 						condition.push(c1, c2);
 						p[1] = '$and';
-					} else if (p[2] == 'sizelte') {
+					} else if (p[2] === 'sizelte') {
 						c1 = {};
 						c2 = {};
 						condition = [];
@@ -218,7 +227,7 @@
 						c2.$where = 'this.' + p[1] + '.length <= ' + data[param];
 						condition.push(c1, c2);
 						p[1] = '$and';
-					} else if (p[2] == 'sizegt') {
+					} else if (p[2] === 'sizegt') {
 						c1 = {};
 						c2 = {};
 						condition = [];
@@ -228,7 +237,7 @@
 						c2.$where = 'this.' + p[1] + '.length > ' + data[param];
 						condition.push(c1, c2);
 						p[1] = '$and';
-					} else if (p[2] == 'sizegte') {
+					} else if (p[2] === 'sizegte') {
 						c1 = {};
 						c2 = {};
 						condition = [];
@@ -244,7 +253,7 @@
 					query[p[1]] = condition;
 
 				} else {
-					if (param[0] != '_' || param == '_id') {
+					if (param[0] !== '_' || param === '_id') {
 						query[param] = data[param];
 					}
 				}
@@ -270,7 +279,7 @@
 								if (subschema.ref) {
 									opts.of = {};
 									for (var s in subschema) {
-										opts.of[s] = (typeof subschema[s] == 'function') ? subschema[s].name : subschema[s];
+										opts.of[s] = (typeof subschema[s] === 'function') ? subschema[s].name : subschema[s];
 									}
 								} else {
 									//Array of objects
@@ -281,7 +290,7 @@
 								}
 
 							} else {
-								opts.of = (typeof field[0] == 'function') ? field[0].name : field[0];
+								opts.of = (typeof field[0] === 'function') ? field[0].name : field[0];
 							}
 						}
 					} else {
@@ -291,7 +300,7 @@
 							opts.fields = buildSchema(field);
 						} else {
 							for (var p in field) {
-								opts[p] = (typeof field[p] == 'function') ? field[p].name : field[p];
+								opts[p] = (typeof field[p] === 'function') ? field[p].name : field[p];
 							}
 
 						}
